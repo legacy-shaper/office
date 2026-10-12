@@ -197,6 +197,10 @@ function blocks(body) {
 }
 function widget(k) {
   const T = D.totals || {}, F = D.formulas || {};
+  if (k === "figures" && D.kind === "project" && (D.project || {}).mode === "firm") return `<div class="figures">
+    <div class="fig main"><div class="label">${t("figPrice")}</div><div class="n">${esc(money(T.price))}</div><small>${t("figPriceSub")}</small></div>
+    <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${esc(money(T.provision))}</div><small>${t("figProvSub")}</small></div></div>`;
+  if (k === "scope") return blocks((D.project || {}).scope);
   if (k === "figures") return `<div class="figures">
     <div class="fig main"><div class="label">${t("figEst")}</div><div class="n">${esc(money(T.amount))}</div><small>${t("figEstSub")}</small></div>
     <div class="fig"><div class="label">${t("figRange")}</div><div class="n">${esc(money(T.low))} – ${esc(money(T.high))}</div><small>${t("figRangeSub")}</small></div>
@@ -235,8 +239,8 @@ function signBlock() {
         <label class="f" for="cv">${t("yourSig")}</label>
         <div class="pad"><canvas id="cv" tabindex="0" aria-label="${t("yourSig")}"></canvas><span class="hint" id="hint">${t("sigHint")}</span></div>
         <div class="row"><button type="button" class="link" id="clr">${t("clear")}</button></div></div></div>
-    <p style="margin:18px 0 0;font-size:13.5px"><a href="#contrat" id="toContract" style="color:var(--gold-text)">${t("reread")}</a></p>
-    <div class="sides" style="margin-top:6px">
+    ${D.contract ? `<p style="margin:18px 0 0;font-size:13.5px"><a href="#contrat" id="toContract" style="color:var(--gold-text)">${t("reread")}</a></p>` : ""}
+    <div class="sides${D.kind === "project" ? " hidden" : ""}" style="margin-top:6px">
       <div class="side"><label class="f" for="fm">${t("yourFormula")}</label><select id="fm">${(F.list || []).map(f => `<option value="${esc(f.k)}" ${f.k === F.def ? "selected" : ""}>${esc(f.n)} · ${t("credits", { n: f.credits })}</option>`).join("")}</select></div>
       <div class="side"><label class="f" for="en">${t("engagement")}</label><select id="en">${(F.engagements || []).map(e => `<option value="${+e.y}" ${+e.y === +F.defEng ? "selected" : ""}>${esc(engLabel(e.y))}</option>`).join("")}</select></div></div>
     <label class="chk"><input type="checkbox" id="ok"><span>${t("accept")}</span></label>

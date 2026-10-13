@@ -196,7 +196,7 @@ const DEF = {
     recapTotal: "Total estimé de la première année", recapTotalSub: "mise en ordre et formule",
     recapDue: "À la signature", recapDueSub: "provision de la mise en ordre ({{provisionPct}} %) et formule de la première année",
     recapAfter: "Le solde de la mise en ordre est facturé à la fin, au temps réellement passé, sans jamais dépasser le plafond.",
-    recapNext: "Les années suivantes : {{price}} par an pour la formule {{formula}}." },
+    recapNext: "Les années suivantes : {{price}} par an pour la formule {{formula}}.", changePlan: "Changer de formule ou d’engagement" },
   en: { pickHint: "Choose your commitment, then your plan: your total updates.", perYear: "a year", chosen: "✓ Your choice",
     plansKicker: "All plans", fullGrid: "See the full price grid",
     figPlus: "The annual plan of your choice is added, from {{min}} to {{max}} a year.", seeTotal: "See your total",
@@ -205,7 +205,7 @@ const DEF = {
     recapTotal: "Estimated total for the first year", recapTotalSub: "putting in order and plan",
     recapDue: "On signature", recapDueSub: "retainer for the putting in order ({{provisionPct}} %) and first year of the plan",
     recapAfter: "The balance of the putting in order is invoiced at the end, for the time actually spent, never above the cap.",
-    recapNext: "Following years: {{price}} a year for the {{formula}} plan." } };
+    recapNext: "Following years: {{price}} a year for the {{formula}} plan.", changePlan: "Change plan or commitment" } };
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const token = (new URLSearchParams(location.search).get("k") || "").toLowerCase();
@@ -286,11 +286,10 @@ function widget(k) {
     <tr class="tot"><td>${t("total")}</td><td class="r">${hours(T.h)}</td><td class="r">${esc(money(T.amount))}</td></tr></tbody></table>`;
   if (k === "formulas") { const E = F.engagements || [];
     if (pickable()) return `<div class="plans" data-plans id="plans">${plansHTML()}</div><p class="small noprint">${t("pickHint")}</p>
-      <details class="noprint" style="margin:6px 0 0"><summary class="small" style="cursor:pointer;color:var(--gold-text)">${t("fullGrid")}</summary>${gridHTML()}</details>
-      ${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`;
+      <details class="noprint" style="margin:6px 0 0"><summary class="small" style="cursor:pointer;color:var(--gold-text)">${t("fullGrid")}</summary>${gridHTML()}</details>`;
     return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>
       ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map((p, i) => `<td class="r">${pickable() ? `<button type="button" class="pick" data-k="${esc(f.k)}" data-y="${+((E[i] || {}).y || 1)}" aria-pressed="false">${esc(money(p))}</button>` : esc(money(p))}</td>`).join("")}</tr>`).join("")}</tbody></table>
-      ${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }
+      ${hasRecap() && !(Q && Q.signed) ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }
   if (k === "contract") return `<details class="full" id="contrat"><summary>${t("contractOpen")}</summary><div class="ctext">${contractHTML()}</div></details>`;
   return "";
 }
@@ -363,7 +362,7 @@ function signBlock() {
   if (Q.expired) return `<div class="done"><div class="label">${t("signKicker")}</div><p>${t("expired", { date: fdate(D.validUntil) })}</p></div>`;
   const F = D.formulas || {}, co = D.company || {};
   return `<div class="label">${t("signKicker")}</div><h2>${t("signTitle")}</h2>
-    ${hasRecap() ? `<div class="label" style="margin-top:18px">${t("yourFormula")}</div><div class="plans" data-plans>${plansHTML()}</div><div data-recap>${recapHTML()}</div>` : ""}
+    ${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div><p class="small noprint" style="margin:6px 0 0"><a href="#plans" style="color:var(--gold-text)">${t("changePlan")}</a></p>` : ""}
     <div class="sides"><div class="side"><label class="f">${esc(co.name)}</label><div class="ls-sig">${esc(co.signer)}</div>
         <p class="small">${esc([co.signer, co.signerTitle].filter(Boolean).join(", "))}<br>${esc(fdate(D.date))}</p></div>
       <div class="side"><label class="f" for="nm">${t("yourName")}</label><input type="text" id="nm" autocomplete="name" maxlength="160">

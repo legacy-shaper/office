@@ -208,9 +208,10 @@ function widget(k) {
     <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${esc(money(T.provision))}</div><small>${t("figProvSub")}</small></div></div>`;
   if (k === "rates") return `<div class="rates">
     <div class="rate"><div class="label">${t("rateF")}</div><div class="n">${esc(money(D.rates.F))} ${t("perHour")}</div><p>${t("rateFText")}</p></div>
-    <div class="rate"><div class="label">${t("rateO")}</div><div class="n">${esc(money(D.rates.O))} ${t("perHour")}</div><p>${t("rateOText")}</p></div></div>`;
+    <div class="rate"><div class="label">${t("rateO")}</div><div class="n">${esc(money(D.rates.O))} ${t("perHour")}</div><p>${t("rateOText")}</p></div>${(D.levels || []).map(x => `
+    <div class="rate"><div class="label">${esc(x.name)}</div><div class="n">${esc(money(x.rate))} ${t("perHour")}</div></div>`).join("")}</div>`;
   if (k === "detail") return `<table><thead><tr><th>${t("thPost")}</th><th class="r">${t("thHours")}</th><th class="r">${t("thAmount")}</th></tr></thead><tbody>
-    ${(D.groups || []).map(g => `<tr class="sub"><td colspan="3">${esc(g.t)}</td></tr>` + g.lines.map(l => `<tr><td>${esc(l.n)}<span class="lvl">${t(l.lv === "F" ? "lvF" : "lvO")}</span></td><td class="r">${hours(l.h)}</td><td class="r">${esc(money(l.a))}</td></tr>`).join("")).join("")}
+    ${(D.groups || []).map(g => `<tr class="sub"><td colspan="3">${esc(g.t)}</td></tr>` + g.lines.map(l => `<tr><td>${esc(l.n)}<span class="lvl">${l.lv === "F" ? t("lvF") : (((D.levels || []).find(x => x.id === l.lv) || {}).name ? esc((D.levels || []).find(x => x.id === l.lv).name) : t("lvO"))}</span></td><td class="r">${hours(l.h)}</td><td class="r">${esc(money(l.a))}</td></tr>`).join("")).join("")}
     <tr class="tot"><td>${t("total")}</td><td class="r">${hours(T.h)}</td><td class="r">${esc(money(T.amount))}</td></tr></tbody></table>`;
   if (k === "formulas") { const E = F.engagements || [];
     return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>

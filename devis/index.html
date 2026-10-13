@@ -45,6 +45,7 @@ section:first-of-type{border-top:0;padding-top:0}
 .small{font-size:13px;color:var(--muted)}
 .box{padding:16px 18px;border-left:1px solid var(--gold);background:var(--ivory)}
 .box b{font-weight:600}
+.testbox{margin:22px 0 0}.testbox .label{color:var(--green)}
 .figures{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:18px 0 8px}
 .fig{background:var(--paper);padding:16px 18px;min-width:0}
 .fig .n{font-family:var(--display);font-size:30px;font-weight:500;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.15}
@@ -275,7 +276,7 @@ function widget(k) {
     <div class="fig main"><div class="label">${t("figEst")}</div><div class="n">${esc(money(T.amount))}</div><small>${t("figEstSub")}</small></div>
     <div class="fig"><div class="label">${t("figRange")}</div><div class="n">${esc(money(T.low))} – ${esc(money(T.high))}</div><small>${t("figRangeSub")}</small></div>
     <div class="fig"><div class="label">${t("figCap")}</div><div class="n">${esc(money(T.cap))}</div><small>${t("figCapSub")}</small></div>
-    <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${esc(money(T.provision))}</div><small>${t("figProvSub")}</small></div></div>${plusLine()}`;
+    <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${TEST() ? esc(TEST().due) : esc(money(T.provision))}</div><small>${TEST() ? esc(TEST().title) : t("figProvSub")}</small></div></div>${plusLine()}`;
   if (k === "rates") return `<div class="rates">
     <div class="rate"><div class="label">${t("rateF")}</div><div class="n">${esc(money(D.rates.F))} ${t("perHour")}</div><p>${t("rateFText")}</p></div>
     <div class="rate"><div class="label">${t("rateO")}</div><div class="n">${esc(money(D.rates.O))} ${t("perHour")}</div><p>${t("rateOText")}</p></div>${(D.levels || []).map(x => `
@@ -304,6 +305,10 @@ function plusLine() {
   const all = ((D.formulas || {}).list || []).flatMap(f => (f.prices || []).map(Number)).filter(n => n > 0); if (!all.length) return "";
   return `<p class="plus">${t("figPlus", { min: money(Math.min(...all)), max: money(Math.max(...all)) })} <a href="#recap" class="noprint">${t("seeTotal")}</a></p>`;
 }
+/* Client test, non facturé (13 Oct 2026): a pilot collection, offered; texts frozen in doc.test by The Legacy */
+const TEST = () => D.test && typeof D.test === "object" ? D.test : null;
+function testBox() { const x = TEST(); if (!x) return "";
+  return `<div class="box testbox" data-test><div class="label">${esc(x.title)}</div><p style="margin:6px 0 0">${esc(x.text)}</p></div>`; }
 /* the whole first year in one place: putting in order (estimate) + the plan chosen, what is due on signature, what follows */
 function recapHTML() {
   const T = D.totals || {}, f = curFormula(), y = sel().y, p = priceOf(f, y), est = +T.amount || 0, due = (+T.provision || 0) + p;
@@ -312,8 +317,8 @@ function recapHTML() {
     <div class="rl"><div><b>${t("recapOrder")}</b><small>${t("recapOrderSub", ex)}</small></div><span class="n">${esc(money(est))}</span></div>
     <div class="rl"><div><b>${t("recapFormula", ex)}</b><small>${t("recapFormulaSub", ex)}</small></div><span class="n" data-v="formula">${esc(money(p))}</span></div>
     <div class="rl tot"><div><b>${t("recapTotal")}</b><small>${t("recapTotalSub")}</small></div><span class="n" data-v="total">${esc(money(est + p))}</span></div>
-    <div class="rl due"><div><b>${t("recapDue")}</b><small>${t("recapDueSub", ex)}</small></div><span class="n" data-v="due">${esc(money(due))}</span></div>
-    <p class="small">${t("recapAfter")}${+y > 1 ? " " + t("recapNext", ex) : ""}</p></div>`;
+    <div class="rl due"><div><b>${t("recapDue")}</b><small>${TEST() ? esc(TEST().title) : t("recapDueSub", ex)}</small></div><span class="n" data-v="due">${TEST() ? esc(TEST().due) : esc(money(due))}</span></div>
+    <p class="small">${TEST() ? esc(TEST().text) : t("recapAfter") + (+y > 1 ? " " + t("recapNext", ex) : "")}</p></div>`;
 }
 /* every plan at a glance (Dylan, 13 Oct 2026): the commitment in one row of buttons, then one card per plan with its yearly
    price for that commitment; one touch chooses. Same choice everywhere (cards, grid, signature, contract, total). */
@@ -351,7 +356,7 @@ function signBlock() {
     return `<div class="done"><div class="label">${t("signedKicker")}</div><h2>${t("thanks", { name: Q.signer_name })}</h2>
       <p>${t("thanksText")}</p>
       ${Q.signature ? `<img class="sigimg" src="${esc(Q.signature)}" alt="${esc(ui.sigTitle)}">` : ""}
-      <div class="seal">${esc(Q.signer_name)}<br>${t("seal", { formula: f ? f.n : Q.formula, engagement: engLabel(Q.engagement) })}<br>${t("signedAt", { when: fwhen(Q.signed_at) })}<br>${t("refLine", { ref: D.ref })}${Q.doc_hash ? `<br><span style="font-size:10px;opacity:.7">SHA-256 ${esc(Q.doc_hash)}</span>` : ""}</div>
+      <div class="seal">${esc(Q.signer_name)}<br>${t("seal", { formula: f ? f.n : Q.formula, engagement: engLabel(Q.engagement) })}<br>${t("signedAt", { when: fwhen(Q.signed_at) })}<br>${t("refLine", { ref: D.ref })}${TEST() ? `<br>${esc(TEST().seal)}` : ""}${Q.doc_hash ? `<br><span style="font-size:10px;opacity:.7">SHA-256 ${esc(Q.doc_hash)}</span>` : ""}</div>
       ${hasRecap() ? `<div data-recap style="text-align:left">${recapHTML()}</div>` : ""}
       <button type="button" class="ghost" id="print">${esc(ui.print)}</button></div>`;
   }
@@ -385,6 +390,7 @@ function render() {
       <div class="label">${t("kicker")}</div><h1>${t("title")}</h1><p class="sub">${t("subtitle")}</p>
       <div class="meta"><div><span>${t("for")}</span><b>${esc(cl.party || cl.name)}</b></div><div><span>${t("ref")}</span><b>${esc(D.ref)}</b></div>
         <div><span>${t("date")}</span><b>${esc(fdate(D.date))}</b></div><div><span>${t("valid")}</span><b>${esc(fdate(D.validUntil))}</b></div></div>
+      ${testBox()}
       ${(D.sections || []).map(s => `<section${s.id ? ` data-s="${esc(s.id)}"` : ""}>${s.label ? `<div class="label">${inline(s.label)}</div>` : ""}${s.title ? `<h2>${inline(s.title)}</h2>` : ""}${blocks(s.body)}</section>`).join("")}
       <section id="signer"><div class="sign" id="signBox">${signBlock()}</div></section>
     </div>

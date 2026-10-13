@@ -118,6 +118,25 @@ td:has(>.pick){padding:4px 2px}
 .pick[aria-pressed="true"]{background:var(--green);color:var(--gold);border-color:var(--green);font-weight:600}
 .pick:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .pick:disabled{cursor:default}
+.plans{margin:16px 0 4px}
+.engs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--green);margin:0 0 14px;max-width:520px}
+.engs button{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 6px;font-size:13px;line-height:1.25;color:var(--green);min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
+.engs button+button{border-left:1px solid var(--green)}
+.engs button[aria-pressed="true"]{background:var(--green);color:var(--gold);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
+.plan{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:14px;min-width:0;border:1px solid var(--line);background:var(--paper);min-height:132px}
+.plan:hover{border-color:var(--gold)}
+.plan .pn{font-family:var(--display);font-size:24px;color:var(--green);line-height:1.1}
+.plan .pc{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-text)}
+.plan .pp{font-family:var(--display);font-size:26px;color:var(--green);margin-top:auto;font-variant-numeric:tabular-nums;line-height:1.1}
+.plan .pp small{font-family:var(--body);font-size:12px;color:var(--muted)}
+.plan .pw{font-size:12px;color:var(--muted);text-decoration:line-through}
+.plan .ck{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);visibility:hidden}
+.plan[aria-pressed="true"]{background:var(--green);border-color:var(--green)}
+.plan[aria-pressed="true"] .pn,.plan[aria-pressed="true"] .pp{color:var(--gold)}
+.plan[aria-pressed="true"] .pc,.plan[aria-pressed="true"] .pp small,.plan[aria-pressed="true"] .pw{color:#DDD5C3}
+.plan[aria-pressed="true"] .ck{visibility:visible}
+.plan:focus-visible,.engs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .recap{margin:22px 0 6px;border:1px solid var(--gold);background:var(--ivory)}
 .recap .rk{padding:14px 18px 4px}
 .recap .rl{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;border-top:1px solid var(--line);align-items:baseline}
@@ -168,7 +187,8 @@ const UI = {
 /* Total mise en ordre + formule (13 Oct 2026). These words are house labels (doc.labels, set in Société → Devis);
    the defaults below only stand in for a quote created before the house added them. */
 const DEF = {
-  fr: { pickHint: "Touchez un prix pour choisir votre formule et votre engagement : votre total se met à jour.",
+  fr: { pickHint: "Choisissez votre engagement, puis votre formule : votre total se met à jour.", perYear: "par an", chosen: "✓ Votre choix",
+    plansKicker: "Toutes les formules", fullGrid: "Voir la grille complète des prix",
     figPlus: "S’y ajoute la formule annuelle de votre choix, de {{min}} à {{max}} par an.", seeTotal: "Voir votre total",
     recapKicker: "Votre total", recapOrder: "Mise en ordre de la collection", recapOrderSub: "estimation, {{hours}} heures · plafond {{cap}}",
     recapFormula: "Formule {{formula}}, première année", recapFormulaSub: "{{credits}} · {{engagement}}",
@@ -176,7 +196,8 @@ const DEF = {
     recapDue: "À la signature", recapDueSub: "provision de la mise en ordre ({{provisionPct}} %) et formule de la première année",
     recapAfter: "Le solde de la mise en ordre est facturé à la fin, au temps réellement passé, sans jamais dépasser le plafond.",
     recapNext: "Les années suivantes : {{price}} par an pour la formule {{formula}}." },
-  en: { pickHint: "Tap a price to choose your plan and commitment: your total updates.",
+  en: { pickHint: "Choose your commitment, then your plan: your total updates.", perYear: "a year", chosen: "✓ Your choice",
+    plansKicker: "All plans", fullGrid: "See the full price grid",
     figPlus: "The annual plan of your choice is added, from {{min}} to {{max}} a year.", seeTotal: "See your total",
     recapKicker: "Your total", recapOrder: "Putting the collection in order", recapOrderSub: "estimate, {{hours}} hours · cap {{cap}}",
     recapFormula: "{{formula}} plan, first year", recapFormulaSub: "{{credits}} · {{engagement}}",
@@ -263,9 +284,12 @@ function widget(k) {
     ${(D.groups || []).map(g => `<tr class="sub"><td colspan="3">${esc(g.t)}</td></tr>` + g.lines.map(l => `<tr><td>${esc(l.n)}<span class="lvl">${l.lv === "F" ? t("lvF") : (((D.levels || []).find(x => x.id === l.lv) || {}).name ? esc((D.levels || []).find(x => x.id === l.lv).name) : t("lvO"))}</span></td><td class="r">${hours(l.h)}</td><td class="r">${esc(money(l.a))}</td></tr>`).join("")).join("")}
     <tr class="tot"><td>${t("total")}</td><td class="r">${hours(T.h)}</td><td class="r">${esc(money(T.amount))}</td></tr></tbody></table>`;
   if (k === "formulas") { const E = F.engagements || [];
+    if (pickable()) return `<div class="plans" data-plans id="plans">${plansHTML()}</div><p class="small noprint">${t("pickHint")}</p>
+      <details class="noprint" style="margin:6px 0 0"><summary class="small" style="cursor:pointer;color:var(--gold-text)">${t("fullGrid")}</summary>${gridHTML()}</details>
+      ${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`;
     return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>
       ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map((p, i) => `<td class="r">${pickable() ? `<button type="button" class="pick" data-k="${esc(f.k)}" data-y="${+((E[i] || {}).y || 1)}" aria-pressed="false">${esc(money(p))}</button>` : esc(money(p))}</td>`).join("")}</tr>`).join("")}</tbody></table>
-      ${pickable() ? `<p class="small noprint">${t("pickHint")}</p>` : ""}${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }
+      ${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }
   if (k === "contract") return `<details class="full" id="contrat"><summary>${t("contractOpen")}</summary><div class="ctext">${contractHTML()}</div></details>`;
   return "";
 }
@@ -291,6 +315,18 @@ function recapHTML() {
     <div class="rl due"><div><b>${t("recapDue")}</b><small>${t("recapDueSub", ex)}</small></div><span class="n" data-v="due">${esc(money(due))}</span></div>
     <p class="small">${t("recapAfter")}${+y > 1 ? " " + t("recapNext", ex) : ""}</p></div>`;
 }
+/* every plan at a glance (Dylan, 13 Oct 2026): the commitment in one row of buttons, then one card per plan with its yearly
+   price for that commitment; one touch chooses. Same choice everywhere (cards, grid, signature, contract, total). */
+function plansHTML() {
+  const F = D.formulas || {}, E = F.engagements || [], s = sel();
+  return `${E.length > 1 ? `<div class="engs" role="group" aria-label="${t("engagement")}">${E.map(e => `<button type="button" class="engb" data-y="${+e.y}" aria-pressed="${+e.y === +s.y}">${esc(engLabel(e.y)).replace(" (", "<br>(").replace(/ %/g, "\u00a0%")}</button>`).join("")}</div>` : ""}
+    <div class="cards">${(F.list || []).map(f => { const p = priceOf(f, s.y), p1 = priceOf(f, 1);
+      return `<button type="button" class="plan" data-k="${esc(f.k)}" aria-pressed="${f.k === s.k}"><span class="ck">${t("chosen")}</span><span class="pn">${esc(f.n)}</span><span class="pc">${t("credits", { n: f.credits })}</span>
+        <span class="pp">${esc(money(p))} <small>${t("perYear")}</small></span>${+s.y > 1 && p1 > p ? `<span class="pw">${esc(money(p1))}</span>` : ""}</button>`; }).join("")}</div>`;
+}
+function gridHTML() { const F = D.formulas || {}, E = F.engagements || [];
+  return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>
+      ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map((p, i) => `<td class="r"><button type="button" class="pick" data-k="${esc(f.k)}" data-y="${+((E[i] || {}).y || 1)}" aria-pressed="false">${esc(money(p))}</button></td>`).join("")}</tr>`).join("")}</tbody></table>`; }
 function setSel(k, y) {
   const F = D.formulas || {}; if (!(F.list || []).some(f => f.k === k)) return; if (!(F.engagements || []).some(e => +e.y === +y)) y = 1;
   SEL = { k, y: +y }; paintSel();
@@ -299,10 +335,14 @@ function paintSel() {
   const s = sel(), f = curFormula();
   document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === s.k && +b.dataset.y === +s.y)));
   document.querySelectorAll("[data-recap]").forEach(x => { x.innerHTML = recapHTML(); });
+  document.querySelectorAll("[data-plans]").forEach(x => { x.innerHTML = plansHTML(); });
   document.querySelectorAll('[data-live="formula"]').forEach(x => { x.textContent = f ? f.n : ""; });
   const fm = $("#fm"), en = $("#en"); if (fm && fm.value !== s.k) fm.value = s.k; if (en && +en.value !== +s.y) en.value = String(s.y);
 }
-document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".pick"); if (b && !b.disabled && pickable()) setSel(b.dataset.k, b.dataset.y); });
+document.addEventListener("click", e => { if (!e.target.closest || !pickable()) return;
+  const b = e.target.closest(".pick"); if (b) { setSel(b.dataset.k, b.dataset.y); return; }
+  const c = e.target.closest(".plan"); if (c) { setSel(c.dataset.k, sel().y); return; }
+  const g = e.target.closest(".engb"); if (g) setSel(sel().k, +g.dataset.y); });
 const engLabel = y => { const e = ((D.formulas || {}).engagements || []).find(x => +x.y === +y) || { y: 1, pct: 0 }; return +e.y === 1 ? fill(L.engNone, V) : fill(L.engOption, Object.assign({}, V, { y: e.y, pct: e.pct })); };
 
 function signBlock() {
@@ -318,6 +358,7 @@ function signBlock() {
   if (Q.expired) return `<div class="done"><div class="label">${t("signKicker")}</div><p>${t("expired", { date: fdate(D.validUntil) })}</p></div>`;
   const F = D.formulas || {}, co = D.company || {};
   return `<div class="label">${t("signKicker")}</div><h2>${t("signTitle")}</h2>
+    ${hasRecap() ? `<div class="label" style="margin-top:18px">${t("yourFormula")}</div><div class="plans" data-plans>${plansHTML()}</div><div data-recap>${recapHTML()}</div>` : ""}
     <div class="sides"><div class="side"><label class="f">${esc(co.name)}</label><div class="ls-sig">${esc(co.signer)}</div>
         <p class="small">${esc([co.signer, co.signerTitle].filter(Boolean).join(", "))}<br>${esc(fdate(D.date))}</p></div>
       <div class="side"><label class="f" for="nm">${t("yourName")}</label><input type="text" id="nm" autocomplete="name" maxlength="160">
@@ -325,10 +366,9 @@ function signBlock() {
         <div class="pad"><canvas id="cv" tabindex="0" aria-label="${t("yourSig")}"></canvas><span class="hint" id="hint">${t("sigHint")}</span></div>
         <div class="row"><button type="button" class="link" id="clr">${t("clear")}</button></div></div></div>
     ${D.contract ? `<p style="margin:18px 0 0;font-size:13.5px"><a href="#contrat" id="toContract" style="color:var(--gold-text)">${t("reread")}</a></p>` : ""}
-    <div class="sides${D.kind === "project" ? " hidden" : ""}" style="margin-top:6px">
+    <div class="sides hidden" style="margin-top:6px">
       <div class="side"><label class="f" for="fm">${t("yourFormula")}</label><select id="fm">${(F.list || []).map(f => `<option value="${esc(f.k)}" ${f.k === sel().k ? "selected" : ""}>${esc(f.n)} · ${t("credits", { n: f.credits })}</option>`).join("")}</select></div>
       <div class="side"><label class="f" for="en">${t("engagement")}</label><select id="en">${(F.engagements || []).map(e => `<option value="${+e.y}" ${+e.y === +sel().y ? "selected" : ""}>${esc(engLabel(e.y))}</option>`).join("")}</select></div></div>
-    ${hasRecap() ? `<div data-recap>${recapHTML()}</div>` : ""}
     <label class="chk"><input type="checkbox" id="ok"><span>${t("accept")}</span></label>
     <button type="button" class="cta" id="go" disabled>${t("signBtn")}</button>
     <div class="msg" id="msg"></div>`;

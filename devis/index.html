@@ -189,7 +189,7 @@ const UI = {
    the defaults below only stand in for a quote created before the house added them. */
 const DEF = {
   fr: { pickHint: "Choisissez votre engagement, puis votre formule : votre total se met à jour.", perYear: "par an", chosen: "✓ Votre choix",
-    plansKicker: "Toutes les formules", fullGrid: "Voir la grille complète des prix",
+    plansKicker: "Toutes les formules", fullGrid: "La grille complète des prix",
     figPlus: "S’y ajoute la formule annuelle de votre choix, de {{min}} à {{max}} par an.", seeTotal: "Voir votre total",
     recapKicker: "Votre total", recapOrder: "Mise en ordre de la collection", recapOrderSub: "estimation, {{hours}} heures · plafond {{cap}}",
     recapFormula: "Formule {{formula}}, première année", recapFormulaSub: "{{credits}} · {{engagement}}",
@@ -198,7 +198,7 @@ const DEF = {
     recapAfter: "Le solde de la mise en ordre est facturé à la fin, au temps réellement passé, sans jamais dépasser le plafond.",
     recapNext: "Les années suivantes : {{price}} par an pour la formule {{formula}}.", changePlan: "Changer de formule ou d’engagement" },
   en: { pickHint: "Choose your commitment, then your plan: your total updates.", perYear: "a year", chosen: "✓ Your choice",
-    plansKicker: "All plans", fullGrid: "See the full price grid",
+    plansKicker: "All plans", fullGrid: "The full price grid",
     figPlus: "The annual plan of your choice is added, from {{min}} to {{max}} a year.", seeTotal: "See your total",
     recapKicker: "Your total", recapOrder: "Putting the collection in order", recapOrderSub: "estimate, {{hours}} hours · cap {{cap}}",
     recapFormula: "{{formula}} plan, first year", recapFormulaSub: "{{credits}} · {{engagement}}",
@@ -229,7 +229,7 @@ const lab = k => L[k] != null && L[k] !== "" ? L[k] : (DEF[D && D.lang === "en" 
 const t = (k, extra) => esc(fill(lab(k), Object.assign({}, V, extra || {})));
 const inline = s => esc(s).replace(/\{\{(\w+)\}\}/g, (m, k) => V[k] != null ? esc(V[k]) : "").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 const SYM = { USD: "$", EUR: "€", GBP: "£", AED: "AED", CHF: "CHF" };
-function money(v) { const s = SYM[D.currency] || D.currency || "", n = Math.round(+v || 0).toLocaleString(D.lang === "en" ? "en-US" : "fr-FR");
+function money(v) { const s = SYM[D.currency] || D.currency || "", n = Math.round(+v || 0).toLocaleString(D.lang === "en" ? "en-US" : "fr-FR").replace(/\u202f/g, "\u00a0");   // the thin space vanished in the bold selected price (« 8550 $ », 13 Oct 2026)
   return D.lang === "en" ? (s.length === 1 ? s + n : s + " " + n) : n + " " + s; }
 const hours = v => (+v || 0).toLocaleString(D.lang === "en" ? "en-US" : "fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fdate = iso => { if (!iso) return ""; const d = new Date(String(iso).length === 10 ? iso + "T12:00:00" : iso); return isNaN(d) ? "" : d.toLocaleDateString(ui.locale, { day: "numeric", month: "long", year: "numeric" }); };
@@ -286,7 +286,7 @@ function widget(k) {
     <tr class="tot"><td>${t("total")}</td><td class="r">${hours(T.h)}</td><td class="r">${esc(money(T.amount))}</td></tr></tbody></table>`;
   if (k === "formulas") { const E = F.engagements || [];
     if (pickable()) return `<div class="plans" data-plans id="plans">${plansHTML()}</div><p class="small noprint">${t("pickHint")}</p>
-      <details class="noprint" style="margin:6px 0 0"><summary class="small" style="cursor:pointer;color:var(--gold-text)">${t("fullGrid")}</summary>${gridHTML()}</details>`;
+      <div class="noprint fullgrid" style="margin:14px 0 0"><p class="small" style="margin:0 0 4px;color:var(--gold-text)">${t("fullGrid")}</p>${gridHTML()}</div>`;   // always open (Dylan, 13 Oct 2026: no click needed)
     return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>
       ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map((p, i) => `<td class="r">${pickable() ? `<button type="button" class="pick" data-k="${esc(f.k)}" data-y="${+((E[i] || {}).y || 1)}" aria-pressed="false">${esc(money(p))}</button>` : esc(money(p))}</td>`).join("")}</tr>`).join("")}</tbody></table>
       ${hasRecap() && !(Q && Q.signed) ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }

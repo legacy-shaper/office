@@ -112,6 +112,29 @@ button{font:inherit;cursor:pointer}
 .state h1{font-size:34px}
 .foot{background:var(--deep);color:#DDD5C3;font-size:12px;line-height:1.8;padding:22px clamp(20px,6vw,64px);text-align:center}
 .foot b{color:var(--gold);font-weight:500;letter-spacing:.2em;text-transform:uppercase;font-size:11px}
+td:has(>.pick){padding:4px 2px}
+.pick{all:unset;box-sizing:border-box;cursor:pointer;display:inline-block;min-height:40px;padding:8px 6px;white-space:nowrap;text-align:right;border:1px solid transparent;font-variant-numeric:tabular-nums}
+.pick:hover{border-color:var(--line)}
+.pick[aria-pressed="true"]{background:var(--green);color:var(--gold);border-color:var(--green);font-weight:600}
+.pick:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.pick:disabled{cursor:default}
+.recap{margin:22px 0 6px;border:1px solid var(--gold);background:var(--ivory)}
+.recap .rk{padding:14px 18px 4px}
+.recap .rl{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;border-top:1px solid var(--line);align-items:baseline}
+.recap .rl:first-of-type{border-top:0}
+.recap .rl div{min-width:0}
+.recap .rl b{font-weight:500}
+.recap .rl small{display:block;font-size:12.5px;color:var(--muted)}
+.recap .rl .n{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:16px}
+.recap .rl.tot{background:var(--green);color:var(--ivory);border-top:0}
+.recap .rl.tot b,.recap .rl.tot .n{color:var(--gold);font-family:var(--display);font-size:24px;font-weight:500}
+.recap .rl.tot b{line-height:1.15;display:block}
+@media (min-width:600px){.pick{min-width:92px;padding:8px 10px}}
+.recap .rl.tot small{color:#DDD5C3}
+.recap .rl.due .n{font-weight:600}
+.recap p.small{margin:0;padding:10px 18px 14px}
+.plus{font-size:13.5px;color:var(--muted);margin:2px 0 0}
+.plus a{color:var(--gold-text)}
 .hidden{display:none!important}
 @media (prefers-reduced-motion:no-preference){.done{animation:f .5s ease-out}@keyframes f{from{opacity:.4}to{opacity:1}}}
 @media print{body{padding:0;background:#fff}.sheet{border:0}.note,.noprint,.cta,.ghost,.link{display:none!important}.ctext{max-height:none;overflow:visible}section{break-inside:auto}.band,.fig.main,.foot{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -142,6 +165,25 @@ const UI = {
     expiredNow: "This proposal has passed its validity date: the signature was not recorded.", print: "Print or save as PDF",
     sigTitle: "Client’s signature", locale: "en-GB", at: ", " } };
 
+/* Total mise en ordre + formule (13 Oct 2026). These words are house labels (doc.labels, set in Société → Devis);
+   the defaults below only stand in for a quote created before the house added them. */
+const DEF = {
+  fr: { pickHint: "Touchez un prix pour choisir votre formule et votre engagement : votre total se met à jour.",
+    figPlus: "S’y ajoute la formule annuelle de votre choix, de {{min}} à {{max}} par an.", seeTotal: "Voir votre total",
+    recapKicker: "Votre total", recapOrder: "Mise en ordre de la collection", recapOrderSub: "estimation, {{hours}} heures · plafond {{cap}}",
+    recapFormula: "Formule {{formula}}, première année", recapFormulaSub: "{{credits}} · {{engagement}}",
+    recapTotal: "Total estimé de la première année", recapTotalSub: "mise en ordre et formule",
+    recapDue: "À la signature", recapDueSub: "provision de la mise en ordre ({{provisionPct}} %) et formule de la première année",
+    recapAfter: "Le solde de la mise en ordre est facturé à la fin, au temps réellement passé, sans jamais dépasser le plafond.",
+    recapNext: "Les années suivantes : {{price}} par an pour la formule {{formula}}." },
+  en: { pickHint: "Tap a price to choose your plan and commitment: your total updates.",
+    figPlus: "The annual plan of your choice is added, from {{min}} to {{max}} a year.", seeTotal: "See your total",
+    recapKicker: "Your total", recapOrder: "Putting the collection in order", recapOrderSub: "estimate, {{hours}} hours · cap {{cap}}",
+    recapFormula: "{{formula}} plan, first year", recapFormulaSub: "{{credits}} · {{engagement}}",
+    recapTotal: "Estimated total for the first year", recapTotalSub: "putting in order and plan",
+    recapDue: "On signature", recapDueSub: "retainer for the putting in order ({{provisionPct}} %) and first year of the plan",
+    recapAfter: "The balance of the putting in order is invoiced at the end, for the time actually spent, never above the cap.",
+    recapNext: "Following years: {{price}} a year for the {{formula}} plan." } };
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const token = (new URLSearchParams(location.search).get("k") || "").toLowerCase();
@@ -161,7 +203,8 @@ const DEVICE = (() => { const ua = navigator.userAgent || "";
 
 let Q = null, D = null, L = {}, V = {}, ui = UI[(navigator.language || "").startsWith("fr") ? "fr" : "en"];
 const fill = (s, v) => String(s || "").replace(/\{\{(\w+)\}\}/g, (m, k) => v[k] != null ? String(v[k]) : "");
-const t = (k, extra) => esc(fill(L[k], Object.assign({}, V, extra || {})));
+const lab = k => L[k] != null && L[k] !== "" ? L[k] : (DEF[D && D.lang === "en" ? "en" : "fr"] || {})[k];
+const t = (k, extra) => esc(fill(lab(k), Object.assign({}, V, extra || {})));
 const inline = s => esc(s).replace(/\{\{(\w+)\}\}/g, (m, k) => V[k] != null ? esc(V[k]) : "").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 const SYM = { USD: "$", EUR: "€", GBP: "£", AED: "AED", CHF: "CHF" };
 function money(v) { const s = SYM[D.currency] || D.currency || "", n = Math.round(+v || 0).toLocaleString(D.lang === "en" ? "en-US" : "fr-FR");
@@ -211,7 +254,7 @@ function widget(k) {
     <div class="fig main"><div class="label">${t("figEst")}</div><div class="n">${esc(money(T.amount))}</div><small>${t("figEstSub")}</small></div>
     <div class="fig"><div class="label">${t("figRange")}</div><div class="n">${esc(money(T.low))} – ${esc(money(T.high))}</div><small>${t("figRangeSub")}</small></div>
     <div class="fig"><div class="label">${t("figCap")}</div><div class="n">${esc(money(T.cap))}</div><small>${t("figCapSub")}</small></div>
-    <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${esc(money(T.provision))}</div><small>${t("figProvSub")}</small></div></div>`;
+    <div class="fig"><div class="label">${t("figProv")}</div><div class="n">${esc(money(T.provision))}</div><small>${t("figProvSub")}</small></div></div>${plusLine()}`;
   if (k === "rates") return `<div class="rates">
     <div class="rate"><div class="label">${t("rateF")}</div><div class="n">${esc(money(D.rates.F))} ${t("perHour")}</div><p>${t("rateFText")}</p></div>
     <div class="rate"><div class="label">${t("rateO")}</div><div class="n">${esc(money(D.rates.O))} ${t("perHour")}</div><p>${t("rateOText")}</p></div>${(D.levels || []).map(x => `
@@ -221,11 +264,45 @@ function widget(k) {
     <tr class="tot"><td>${t("total")}</td><td class="r">${hours(T.h)}</td><td class="r">${esc(money(T.amount))}</td></tr></tbody></table>`;
   if (k === "formulas") { const E = F.engagements || [];
     return `<table><thead><tr><th>${t("thFormula")}</th>${E.map(e => `<th class="r">${+e.y === 1 ? t("engNone") : t("engYears", { y: e.y })}</th>`).join("")}</tr></thead><tbody>
-      ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map(p => `<td class="r">${esc(money(p))}</td>`).join("")}</tr>`).join("")}</tbody></table>`; }
+      ${(F.list || []).map(f => `<tr><td>${esc(f.n)}<span class="lvl">${t("credits", { n: f.credits })}</span></td>${f.prices.map((p, i) => `<td class="r">${pickable() ? `<button type="button" class="pick" data-k="${esc(f.k)}" data-y="${+((E[i] || {}).y || 1)}" aria-pressed="false">${esc(money(p))}</button>` : esc(money(p))}</td>`).join("")}</tr>`).join("")}</tbody></table>
+      ${pickable() ? `<p class="small noprint">${t("pickHint")}</p>` : ""}${hasRecap() ? `<div id="recap" data-recap>${recapHTML()}</div>` : ""}`; }
   if (k === "contract") return `<details class="full" id="contrat"><summary>${t("contractOpen")}</summary><div class="ctext">${contractHTML()}</div></details>`;
   return "";
 }
-const curFormula = () => { const k = ($("#fm") && $("#fm").value) || (Q && Q.signed ? Q.formula : (D.formulas || {}).def); return ((D.formulas || {}).list || []).find(f => f.k === k) || ((D.formulas || {}).list || [])[0]; };
+let SEL = null;
+const sel = () => { if (!SEL) { const F = D.formulas || {}; SEL = Q && Q.signed ? { k: Q.formula, y: +Q.engagement || 1 } : { k: F.def, y: +F.defEng || 1 }; } return SEL; };
+const curFormula = () => { const k = sel().k; return ((D.formulas || {}).list || []).find(f => f.k === k) || ((D.formulas || {}).list || [])[0]; };
+const hasRecap = () => D.kind !== "project" && ((D.formulas || {}).list || []).length > 0;
+const pickable = () => hasRecap() && !(Q && (Q.signed || Q.expired));
+const priceOf = (f, y) => { const E = (D.formulas || {}).engagements || [], i = E.findIndex(e => +e.y === +y); return f ? +(f.prices || [])[i < 0 ? 0 : i] || 0 : 0; };
+function plusLine() {
+  if (!hasRecap()) return "";
+  const all = ((D.formulas || {}).list || []).flatMap(f => (f.prices || []).map(Number)).filter(n => n > 0); if (!all.length) return "";
+  return `<p class="plus">${t("figPlus", { min: money(Math.min(...all)), max: money(Math.max(...all)) })} <a href="#recap" class="noprint">${t("seeTotal")}</a></p>`;
+}
+/* the whole first year in one place: putting in order (estimate) + the plan chosen, what is due on signature, what follows */
+function recapHTML() {
+  const T = D.totals || {}, f = curFormula(), y = sel().y, p = priceOf(f, y), est = +T.amount || 0, due = (+T.provision || 0) + p;
+  const ex = { formula: f ? f.n : "", credits: f ? fill(lab("credits"), Object.assign({}, V, { n: f.credits })) : "", engagement: engLabel(y), hours: hours(T.h), cap: money(T.cap), provisionPct: V.provisionPct != null ? V.provisionPct : (T.provisionPct || ""), price: money(p) };
+  return `<div class="recap"><div class="rk label">${t("recapKicker")}</div>
+    <div class="rl"><div><b>${t("recapOrder")}</b><small>${t("recapOrderSub", ex)}</small></div><span class="n">${esc(money(est))}</span></div>
+    <div class="rl"><div><b>${t("recapFormula", ex)}</b><small>${t("recapFormulaSub", ex)}</small></div><span class="n" data-v="formula">${esc(money(p))}</span></div>
+    <div class="rl tot"><div><b>${t("recapTotal")}</b><small>${t("recapTotalSub")}</small></div><span class="n" data-v="total">${esc(money(est + p))}</span></div>
+    <div class="rl due"><div><b>${t("recapDue")}</b><small>${t("recapDueSub", ex)}</small></div><span class="n" data-v="due">${esc(money(due))}</span></div>
+    <p class="small">${t("recapAfter")}${+y > 1 ? " " + t("recapNext", ex) : ""}</p></div>`;
+}
+function setSel(k, y) {
+  const F = D.formulas || {}; if (!(F.list || []).some(f => f.k === k)) return; if (!(F.engagements || []).some(e => +e.y === +y)) y = 1;
+  SEL = { k, y: +y }; paintSel();
+}
+function paintSel() {
+  const s = sel(), f = curFormula();
+  document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === s.k && +b.dataset.y === +s.y)));
+  document.querySelectorAll("[data-recap]").forEach(x => { x.innerHTML = recapHTML(); });
+  document.querySelectorAll('[data-live="formula"]').forEach(x => { x.textContent = f ? f.n : ""; });
+  const fm = $("#fm"), en = $("#en"); if (fm && fm.value !== s.k) fm.value = s.k; if (en && +en.value !== +s.y) en.value = String(s.y);
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".pick"); if (b && !b.disabled && pickable()) setSel(b.dataset.k, b.dataset.y); });
 const engLabel = y => { const e = ((D.formulas || {}).engagements || []).find(x => +x.y === +y) || { y: 1, pct: 0 }; return +e.y === 1 ? fill(L.engNone, V) : fill(L.engOption, Object.assign({}, V, { y: e.y, pct: e.pct })); };
 
 function signBlock() {
@@ -235,6 +312,7 @@ function signBlock() {
       <p>${t("thanksText")}</p>
       ${Q.signature ? `<img class="sigimg" src="${esc(Q.signature)}" alt="${esc(ui.sigTitle)}">` : ""}
       <div class="seal">${esc(Q.signer_name)}<br>${t("seal", { formula: f ? f.n : Q.formula, engagement: engLabel(Q.engagement) })}<br>${t("signedAt", { when: fwhen(Q.signed_at) })}<br>${t("refLine", { ref: D.ref })}${Q.doc_hash ? `<br><span style="font-size:10px;opacity:.7">SHA-256 ${esc(Q.doc_hash)}</span>` : ""}</div>
+      ${hasRecap() ? `<div data-recap style="text-align:left">${recapHTML()}</div>` : ""}
       <button type="button" class="ghost" id="print">${esc(ui.print)}</button></div>`;
   }
   if (Q.expired) return `<div class="done"><div class="label">${t("signKicker")}</div><p>${t("expired", { date: fdate(D.validUntil) })}</p></div>`;
@@ -248,8 +326,9 @@ function signBlock() {
         <div class="row"><button type="button" class="link" id="clr">${t("clear")}</button></div></div></div>
     ${D.contract ? `<p style="margin:18px 0 0;font-size:13.5px"><a href="#contrat" id="toContract" style="color:var(--gold-text)">${t("reread")}</a></p>` : ""}
     <div class="sides${D.kind === "project" ? " hidden" : ""}" style="margin-top:6px">
-      <div class="side"><label class="f" for="fm">${t("yourFormula")}</label><select id="fm">${(F.list || []).map(f => `<option value="${esc(f.k)}" ${f.k === F.def ? "selected" : ""}>${esc(f.n)} · ${t("credits", { n: f.credits })}</option>`).join("")}</select></div>
-      <div class="side"><label class="f" for="en">${t("engagement")}</label><select id="en">${(F.engagements || []).map(e => `<option value="${+e.y}" ${+e.y === +F.defEng ? "selected" : ""}>${esc(engLabel(e.y))}</option>`).join("")}</select></div></div>
+      <div class="side"><label class="f" for="fm">${t("yourFormula")}</label><select id="fm">${(F.list || []).map(f => `<option value="${esc(f.k)}" ${f.k === sel().k ? "selected" : ""}>${esc(f.n)} · ${t("credits", { n: f.credits })}</option>`).join("")}</select></div>
+      <div class="side"><label class="f" for="en">${t("engagement")}</label><select id="en">${(F.engagements || []).map(e => `<option value="${+e.y}" ${+e.y === +sel().y ? "selected" : ""}>${esc(engLabel(e.y))}</option>`).join("")}</select></div></div>
+    ${hasRecap() ? `<div data-recap>${recapHTML()}</div>` : ""}
     <label class="chk"><input type="checkbox" id="ok"><span>${t("accept")}</span></label>
     <button type="button" class="cta" id="go" disabled>${t("signBtn")}</button>
     <div class="msg" id="msg"></div>`;
@@ -271,7 +350,7 @@ function render() {
     </div>
     <footer class="foot"><b>${esc(co.name)}</b><br>${esc(String(co.address || "").split(/\n+/).join(" · "))}<br>${esc([L.licence && co.licence ? fill(L.licence, { licence: co.licence }) : "", co.email, co.phone].filter(Boolean).join(" · "))}</footer>
   </article>`;
-  wire();
+  wire(); paintSel();
 }
 
 function wire() {
@@ -294,7 +373,8 @@ function wire() {
   function check() { go.disabled = SELF || !(nm.value.trim().length > 2 && drawn && ok.checked);
     msg.textContent = SELF ? (PREVIEW ? ui.draft : ui.preview) : go.disabled ? fill(L.needAll, V) : ""; }
   nm.addEventListener("input", check); ok.addEventListener("change", check); check();
-  fm.addEventListener("change", () => { const f = curFormula(); document.querySelectorAll('[data-live="formula"]').forEach(x => { x.textContent = f ? f.n : ""; }); });
+  fm.addEventListener("change", () => setSel(fm.value, +$("#en").value));
+  const enS = $("#en"); if (enS) enS.addEventListener("change", () => setSel(fm.value, +enS.value));
   function sigData() { // a light PNG of the drawn signature (white background), same proportions
     const w = Math.min(900, cv.width), h = Math.round(cv.height * w / cv.width), o = document.createElement("canvas"); o.width = w; o.height = h;
     const c = o.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, w, h); c.drawImage(cv, 0, 0, w, h); return o.toDataURL("image/png"); }
@@ -306,7 +386,7 @@ function wire() {
       try { fetch(`${SB_URL}/functions/v1/scoping-notify`, { method: "POST", keepalive: true, headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ token, event: "signed" }) }).catch(() => {}); } catch (e) {}
       Object.assign(Q, { signed: true, signed_at: r.signed_at, signer_name: name, formula: f, engagement: y, signature: sigData(), doc_hash: r.doc_hash });
       $("#signBox").innerHTML = signBlock(); wire(); $("#signBox").scrollIntoView({ block: "start" }); return; }
-    if (r && r.reason === "already") { await load(); return; }
+    if (r && r.reason === "already") { SEL = null; await load(); return; }
     if (r && r.reason === "expired") { Q.expired = true; $("#signBox").innerHTML = `<p class="msg">${esc(ui.expiredNow)}</p>` + signBlock(); return; }
     go.disabled = false; go.textContent = label; msg.textContent = fill(ui.fail, { btn: label });
   };
@@ -325,7 +405,7 @@ function previewWait() {
   addEventListener("message", e => {
     const m = e.data;
     if (!PREVIEW_OK(e.origin) || e.source !== window.parent || !m || m.ls !== "preview" || m.kind !== "quote" || !m.doc || typeof m.doc !== "object") return;
-    try { Q = { ok: true, doc: m.doc, signed: false, expired: false }; D = m.doc; ui = UI[D.lang === "en" ? "en" : "fr"]; L = D.labels || {}; V = Object.assign({}, D.vars || {});
+    try { SEL = null; Q = { ok: true, doc: m.doc, signed: false, expired: false }; D = m.doc; ui = UI[D.lang === "en" ? "en" : "fr"]; L = D.labels || {}; V = Object.assign({}, D.vars || {});
       const y = scrollY; render(); scrollTo(0, y); }
     catch (x) { stateView(ui.closedT, ui.closed); }
   });

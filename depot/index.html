@@ -111,6 +111,9 @@ ol.ess .prio{display:inline-block;margin-left:8px;font:500 9.5px/1 "Hanken Grote
 ol.ess p{margin:4px 0 0;font-size:14.5px}
 ol.ess p.you{font:italic 400 17px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-top:6px}
 ol.ess p.you span{font:500 10px/1 "Hanken Grotesk",sans-serif;font-style:normal;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
+.reassure{background:var(--paper);border:1.5px solid var(--gold);border-radius:14px;padding:20px 18px;margin:0 0 18px;text-align:center}
+.reassure b{display:block;font:500 26px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-bottom:8px}
+.reassure p{margin:0;font-size:15.5px;line-height:1.6}
 .hidden{display:none!important}
 </style>
 </head>
@@ -148,6 +151,8 @@ fr: {
   loading: "Ouverture de votre espace…", conf: "Strictement confidentiel",
   invalid: "Ce lien n’est plus actif. Pour tout envoi, écrivez simplement à office@legacy-shaper.com : nous vous adresserons un nouveau lien.",
   previewNote: "Aperçu : rien n’est envoyé ni enregistré. Le client verra cette page avec son lien personnel.",
+  reT: "Ici, tout est simple.",
+  reP: "Ne vous souciez ni de l’ordre ni du classement : transmettez-nous vos documents comme ils viennent, classés ou non, en une fois ou au fil des jours. Et s’il vous manque certains des éléments mentionnés plus bas, c’est tout à fait naturel : nous ne sommes qu’en phase 1. Réunir ce qui manque fait précisément partie de notre travail, et nous nous en chargerons pour vous.",
   phT: "Votre mise en ordre, en deux phases",
   ph1T: "Phase 1 · maintenant", ph1P: "Vous nous transmettez vos documents, ici ou par email. Nous les lisons, les trions, les croisons et les rattachons à chacune de vos œuvres. Vous recevez ensuite notre première analyse : ce que nous avons réuni, vérifié et déjà corrigé pour vous.",
   ph2T: "Phase 2 · la phase finale", ph2P: "Nous vous indiquons les éléments qui restent à réunir. Vous nous communiquez simplement vos interlocuteurs (galeries, maisons de vente, assureur, lieux de stockage), et nous leur demandons nous-mêmes, en votre nom, tous les documents manquants. Vous suivez chaque démarche dans votre application.",
@@ -155,7 +160,7 @@ fr: {
   exT: "Plus vous nous confiez d’éléments, plus notre analyse sera complète.",
   exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : un tableau sommaire, une liste inachevée, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
   essT: "Ce que vous pouvez nous confier, et ce que nous en faisons pour vous",
-  essP: "Envoyez-nous tout ce dont vous disposez, sans rien trier : chaque document trouve sa place dans notre analyse.",
+  essP: "Cette liste est un simple repère, jamais une obligation : envoyez-nous ce dont vous disposez, sans rien trier. Ce qui manque, nous le réunirons pour vous.",
   prio: "En priorité", forYou: "Pour vous",
   ess: [
     ["Votre inventaire", "Tableau Excel, liste d’assurance, liste du family office, export de votre logiciel de collection, même sommaire ou en brouillon ; idéalement avec l’emplacement, les dimensions et la valeur de chaque œuvre.", "Un inventaire unique, harmonisé avec les documents des galeries et des maisons de vente.", 1],
@@ -211,6 +216,8 @@ en: {
   loading: "Opening your space…", conf: "Strictly confidential",
   invalid: "This link is no longer active. To share documents, simply write to office@legacy-shaper.com and we will send you a new link.",
   previewNote: "Preview: nothing is sent or saved. The client will see this page through a personal link.",
+  reT: "Here, everything is simple.",
+  reP: "There is no need to think about order or sorting: send us your documents just as they come, sorted or not, all at once or over the coming days. And if some of the elements mentioned below are missing, that is entirely natural: we are only in phase 1. Gathering what is missing is precisely part of our work, and we will take care of it for you.",
   phT: "Putting your collection in order, in two phases",
   ph1T: "Phase 1 · now", ph1P: "You share your documents with us, here or by email. We read, sort and cross-check them, and link them to each of your works. You then receive our first analysis: what we have gathered, verified and already corrected for you.",
   ph2T: "Phase 2 · the final phase", ph2P: "We let you know which elements remain to be gathered. You simply give us your contacts (galleries, auction houses, insurer, storage facilities), and we ourselves request every missing document from them, on your behalf. You follow each step in your app.",
@@ -218,7 +225,7 @@ en: {
   exT: "The more you entrust to us, the more complete our analysis will be.",
   exP: "We take care of all the sorting; your part is simply to share what you have. Please feel free to send us what you regard as drafts as well: a rough spreadsheet, an unfinished list, notes. Every element helps us cross-check the information, locate each of your works and deliver, at the end of phase 1, a clear and rigorous first analysis.",
   essT: "What you may entrust to us, and what we do with it for you",
-  essP: "Send us everything you have, without sorting anything: each document finds its place in our analysis.",
+  essP: "This list is simply a guide, never an obligation: send us what you have, without sorting anything. Whatever is missing, we will gather for you.",
   prio: "First of all", forYou: "For you",
   ess: [
     ["Your inventory", "Excel spreadsheet, insurance list, family office list, export from your collection software, however brief or in draft; ideally with the location, dimensions and value of each work.", "A single inventory, harmonised with the documents of the galleries and auction houses.", 1],
@@ -289,6 +296,7 @@ function render() {
   if (S.finished) { $("#main").innerHTML = `<section class="done"><p>${esc(t.doneP1)}</p><p>${esc(t.doneP2)}</p>${PREVIEW ? `<p class="note">${esc(t.previewFinish)}</p>` : ""}</section>`; return; }
   const bulk = filesOf(null);
   $("#main").innerHTML = `
+  <div class="reassure"><b>${esc(t.reT)}</b><p>${esc(t.reP)}</p></div>
   <section class="phases"><h2>${esc(t.phT)}</h2>
     <div class="ph on"><b>${esc(t.ph1T)}</b><p>${esc(t.ph1P)}</p></div>
     <div class="ph"><b>${esc(t.ph2T)}</b><p>${esc(t.ph2P)}</p></div>

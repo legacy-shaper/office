@@ -79,8 +79,6 @@ canvas.sig{display:block;width:100%;height:150px;border:1px solid rgba(36,74,48,
 .exergue{background:var(--deep);color:var(--ivory);border-radius:14px;padding:20px 18px;margin:0 0 18px;border-left:4px solid var(--gold)}
 .exergue b{display:block;font:500 23px/1.25 "Cormorant Garamond",Georgia,serif;color:var(--soft);margin-bottom:8px}
 .exergue p{margin:0;font-size:15px;line-height:1.6}
-ol.ess{margin:8px 0 6px;padding-left:22px}
-ol.ess li{margin:0 0 10px;font-size:15px}
 h2.two{text-align:center;display:block;margin:30px 0 4px}
 .total{text-align:center;color:var(--green);font-size:14px;margin:0}
 section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
@@ -101,19 +99,23 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 .link p{font-size:14px;color:var(--muted);margin:0 0 10px}
 .link small{color:var(--muted);overflow-wrap:anywhere}
 .twop{text-align:center;max-width:560px;margin:6px auto 12px;font-size:15px}
-.essw h2{display:block}
-ol.ess{list-style:none;margin:10px 0 4px;padding:0}
-ol.ess li{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--line);margin:0}
-ol.ess li:first-child{border-top:0}
-ol.ess .n{flex:0 0 26px;font:500 26px/1 "Cormorant Garamond",Georgia,serif;color:var(--gold)}
-ol.ess b{font:500 20px/1.25 "Cormorant Garamond",Georgia,serif;color:var(--green)}
-ol.ess .prio{display:inline-block;margin-left:8px;font:500 9.5px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-style:normal;color:var(--ivory);background:var(--gold);border-radius:999px;padding:4px 8px;vertical-align:3px}
-ol.ess p{margin:4px 0 0;font-size:14.5px}
-ol.ess p.you{font:italic 400 17px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-top:6px}
-ol.ess p.you span{font:500 10px/1 "Hanken Grotesk",sans-serif;font-style:normal;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
 .reassure{background:var(--paper);border:1.5px solid var(--gold);border-radius:14px;padding:20px 18px;margin:0 0 18px;text-align:center}
 .reassure b{display:block;font:500 26px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-bottom:8px}
 .reassure p{margin:0;font-size:15.5px;line-height:1.6}
+.prio1{font-size:14.5px;margin:0 0 12px}
+.prio1 span{display:inline-block;font:500 9.5px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--ivory);background:var(--gold);border-radius:999px;padding:4px 8px;margin-right:4px;vertical-align:2px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row dense;gap:10px;margin:12px 0}
+.tile{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tile.open{grid-column:1/-1;border-color:var(--gold)}
+.tile .th{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:flex-start;gap:8px;width:100%;padding:12px;min-height:64px}
+.tile .n{font:500 22px/1 "Cormorant Garamond",Georgia,serif;color:var(--gold);flex:0 0 auto}
+.tile .tt{font:500 17px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--green);flex:1}
+.tile .prio{display:block;width:max-content;margin-top:5px;font:500 9px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.3px;text-transform:uppercase;font-style:normal;color:var(--ivory);background:var(--gold);border-radius:999px;padding:4px 7px}
+.tile .tc{font-size:12px;color:var(--green);flex:0 0 auto}
+.tile .tb{padding:0 14px 14px 40px;margin-top:-4px}
+.tile .tb p{margin:0 0 8px;font-size:14.5px}
+.tile .tb p.you{font:italic 400 17px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green)}
+.tile .tb p.you span{font:500 10px/1 "Hanken Grotesk",sans-serif;font-style:normal;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -178,7 +180,8 @@ fr: {
   twoT: "Deux façons de déposer, à combiner librement",
   twoP: "Vous pouvez utiliser l’une, l’autre, ou les deux à la fois : ce que vous avez déjà classé, déposez-le dans la bonne rubrique ; tout le reste, déposez-le simplement en vrac. Tout est possible, et nous nous occupons du reste.",
   c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
-  c2T: "2 · Classé par vos soins", c2S: "Les documents que vous avez déjà classés peuvent aller directement dans les rubriques ci-dessous, en complément de votre dépôt en vrac.",
+  c2T: "2 · Classé par vos soins", c2S: "Touchez une rubrique : vous y verrez ce qu’elle comprend, ce que nous en faisons pour vous, et vous pourrez y déposer directement les documents que vous avez déjà classés.",
+  prioLine: "Pour commencer : votre tableau d’œuvres, même sommaire, et les documents de vos lieux de stockage.",
   doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
   dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir",
   formats: "Tous les formats habituels sont acceptés : PDF, photos (JPEG, PNG, ainsi que les photos d’iPhone), Excel, Word, emails et dossiers compressés (ZIP).", photo: "Photographier un document", files: "Choisir des fichiers",
@@ -243,7 +246,8 @@ en: {
   twoT: "Two ways to upload, to combine as you wish",
   twoP: "You may use one, the other, or both at once: what you have already sorted, upload into the right section; everything else, simply upload all together. Everything is possible, and we take care of the rest.",
   c1T: "1 · Everything at once", c1S: "The simplest way: upload all your documents here, even mixed together, even a whole folder. We sort them for you.",
-  c2T: "2 · Sorted by you", c2S: "Documents you have already sorted can go straight into the sections below, alongside your general upload.",
+  c2T: "2 · Sorted by you", c2S: "Touch a section: you will see what it covers, what we do with it for you, and you can upload the documents you have already sorted straight into it.",
+  prioLine: "To begin with: your list of works, however brief, and the documents from your storage facilities.",
   doubt: "Unsure of the right section? Simply upload the document under “Everything at once”: we will take care of it, that is our role.",
   dropB: "Drop your files here", dropS: "or tap to choose them",
   formats: "All the usual formats are accepted: PDF, photos (JPEG, PNG, as well as iPhone photos), Excel, Word, emails and compressed folders (ZIP).", photo: "Photograph a document", files: "Choose files",
@@ -278,15 +282,17 @@ const CAT_KEYS = ["list", "storage", "invoices", "photos", "certificates", "insu
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let lang = Q.get("lang") === "en" ? "en" : "fr";
-let S = { files: [], helpers: [], questions: [], links: [], finished: false };
+let S = { files: [], helpers: [], questions: [], links: [], open: null, finished: false };
 let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
 
 function filesOf(k) { return S.files.filter(f => f.cat === k); }
 function listHTML(fs) { const t = T[lang]; return fs.length ? `<ul class="files">${fs.slice().reverse().map(f => `<li><span>${esc(f.name)}</span><span>${esc(t.now)}</span></li>`).join("")}</ul>` : ""; }
-function catHTML(k, i) {
-  const t = T[lang], [label, help] = t.cats[i], n = filesOf(k).length;
-  return `<div class="item" id="cat_${k}"><div class="cath"><div><p class="ql">${esc(label)}<small>${esc(help)}</small></p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}</div>
-    <button type="button" class="btn ghost sm" data-cat="${k}">${esc(t.share)}</button></div></div>`;
+/* The 12 sections as tiles (Dylan, 15 Oct 2026: « un énorme pavé à lire ») — a tile shows its title only; touching it opens what
+   it covers, what Legacy Shaper does with it for the client, and its « Déposer » button. One open at a time. */
+function tileHTML(k, i) {
+  const t = T[lang], [h, d, y, pr] = t.ess[i], n = filesOf(k).length, open = S.open === k;
+  return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}${pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
+    ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}<button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button></div>` : ""}</div>`;
 }
 function render() {
   const t = T[lang];
@@ -302,12 +308,11 @@ function render() {
     <div class="ph"><b>${esc(t.ph2T)}</b><p>${esc(t.ph2P)}</p></div>
     <p class="phend">${esc(t.phEnd)}</p></section>
   <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
-  <section class="essw"><h2>${esc(t.essT)}</h2><p class="sub">${esc(t.essP)}</p>
-    <ol class="ess">${t.ess.map(([h, d, y, pr], i) => `<li><span class="n">${i + 1}</span><div><b>${esc(h)}</b>${pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}<p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p></div></li>`).join("")}</ol></section>
   <h2 class="two">${esc(t.twoT)}</h2>
   <p class="twop">${esc(t.twoP)}</p>
   ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}
   <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${bulk.length ? esc(t.received(bulk.length)) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
+    <p class="prio1"><span>${esc(t.prio)}</span> ${esc(t.prioLine)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
     <p class="formats">${esc(t.formats)}</p>
     <div class="link"><b>${esc(t.linkT)}</b><p>${esc(t.linkP)}</p>
@@ -317,9 +322,9 @@ function render() {
     <div class="acts"><button type="button" class="btn ghost" id="camBtn">${esc(t.photo)}</button><button type="button" class="btn ghost" id="pickBtn">${esc(t.files)}</button></div>
     ${listHTML(bulk)}</section>
   <section class="choice"><h2>${esc(t.c2T)}</h2><p class="sub">${esc(t.c2S)}</p>
-    <div class="doubt">${esc(t.doubt)}</div>
-    <p class="formats" style="margin-top:10px">${esc(t.formats)}</p>
-    ${CAT_KEYS.map(catHTML).join("")}</section>
+    <p class="sub">${esc(t.essP)}</p>
+    <div class="tiles">${CAT_KEYS.map(tileHTML).join("")}</div>
+    <div class="doubt">${esc(t.doubt)}</div></section>
   <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(t.qP)}</p>
     ${S.questions.map(q => `<div class="qsent"><p>${esc(q)}</p><span>✓ ${esc(t.qDone)}</span></div>`).join("")}
     <textarea class="t" id="qText" rows="3" placeholder="${esc(t.qPh)}"></textarea>
@@ -344,6 +349,7 @@ function wire() {
   $("#cam").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   const m = $("#main");
   m.addEventListener("click", e => {
+    const tl = e.target.closest("[data-tile]"); if (tl) { S.open = S.open === tl.dataset.tile ? null : tl.dataset.tile; render(); const o = $("#cat_" + tl.dataset.tile); if (o) o.scrollIntoView({ block: "nearest" }); return; }
     const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }

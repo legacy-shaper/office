@@ -101,6 +101,16 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 .link p{font-size:14px;color:var(--muted);margin:0 0 10px}
 .link small{color:var(--muted);overflow-wrap:anywhere}
 .twop{text-align:center;max-width:560px;margin:6px auto 12px;font-size:15px}
+.essw h2{display:block}
+ol.ess{list-style:none;margin:10px 0 4px;padding:0}
+ol.ess li{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--line);margin:0}
+ol.ess li:first-child{border-top:0}
+ol.ess .n{flex:0 0 26px;font:500 26px/1 "Cormorant Garamond",Georgia,serif;color:var(--gold)}
+ol.ess b{font:500 20px/1.25 "Cormorant Garamond",Georgia,serif;color:var(--green)}
+ol.ess .prio{display:inline-block;margin-left:8px;font:500 9.5px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-style:normal;color:var(--ivory);background:var(--gold);border-radius:999px;padding:4px 8px;vertical-align:3px}
+ol.ess p{margin:4px 0 0;font-size:14.5px}
+ol.ess p.you{font:italic 400 17px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-top:6px}
+ol.ess p.you span{font:500 10px/1 "Hanken Grotesk",sans-serif;font-style:normal;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -144,10 +154,22 @@ fr: {
   phEnd: "À chaque étape, nous faisons le travail à votre place.",
   exT: "Plus vous nous confiez d’éléments, plus notre analyse sera complète.",
   exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : un tableau sommaire, une liste inachevée, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
-  essT: "Les essentiels pour commencer",
-  ess: ["Votre liste d’œuvres ou votre tableau Excel, même sommaire, idéalement avec l’emplacement de chaque œuvre, ses dimensions et sa valeur.",
-        "Où se trouvent vos œuvres : les factures et contrats de vos lieux de stockage, leurs courriers et confirmations, vos certificats de dépôt et de prise en charge.",
-        "Vos factures d’achat et bordereaux d’adjudication.", "Les photographies de vos œuvres, quelles qu’elles soient."],
+  essT: "Ce que vous pouvez nous confier, et ce que nous en faisons pour vous",
+  essP: "Envoyez-nous tout ce dont vous disposez, sans rien trier : chaque document trouve sa place dans notre analyse.",
+  prio: "En priorité", forYou: "Pour vous",
+  ess: [
+    ["Votre inventaire", "Tableau Excel, liste d’assurance, liste du family office, export de votre logiciel de collection, même sommaire ou en brouillon ; idéalement avec l’emplacement, les dimensions et la valeur de chaque œuvre.", "Un inventaire unique, harmonisé avec les documents des galeries et des maisons de vente.", 1],
+    ["Vos lieux de conservation", "Factures et contrats de vos lieux de stockage et ports francs, courriers, confirmations et certificats de dépôt, inventaires établis par ces lieux.", "Chaque œuvre localisée avec certitude, et chaque lieu rapproché de votre assurance.", 1],
+    ["Vos acquisitions", "Factures des galeries, bordereaux d’adjudication, contrats de vente privée, preuves de paiement ; pour une œuvre reçue en héritage ou en donation, l’acte ou l’inventaire notarié.", "Pour chaque œuvre : date, vendeur, prix d’acquisition et entité propriétaire établis.", 0],
+    ["Vos photographies", "Vues de face, verso, signature, étiquettes au dos, détails, vues d’installation, même prises avec votre téléphone.", "Une image de référence pour chaque œuvre ; celles qui manquent, nous les obtenons.", 0],
+    ["L’authenticité", "Certificats d’authenticité, avis de comité ou de fondation, références au catalogue raisonné ; pour le design, documents de l’éditeur ou du fabricant.", "L’authenticité de chaque œuvre documentée et vérifiée à la source.", 0],
+    ["Votre assurance", "Polices en cours et précédentes, conditions particulières, inventaire des œuvres assurées, avenants, attestations, coordonnées de votre courtier.", "Un point complet sur la couverture de chaque œuvre : valeurs, lieux couverts, échéances.", 0],
+    ["Constats d’état et restaurations", "Condition reports, rapports et factures de restauration.", "La mémoire de l’état de chaque œuvre, sur laquelle reposent l’assurance, les transports et les prêts.", 0],
+    ["Vos estimations", "Estimations et rapports d’expertise de galeries, d’experts ou de maisons de vente.", "Des valeurs actualisées, rapprochées de vos valeurs assurées.", 0],
+    ["Provenance et historique", "Catalogues d’exposition, publications, correspondances avec les galeries et les artistes.", "L’histoire de chaque œuvre, qui en fonde la valeur.", 0],
+    ["Transport, douane et encadrement", "Factures de transport, documents de douane, régime fiscal et TVA à l’importation, admissions temporaires, licences d’exportation, CITES, encadrement, caisses.", "Le statut douanier et fiscal de chaque œuvre, et ses conditions de transport.", 0],
+    ["Propriété, prêts et engagements", "Sociétés, trusts, indivisions ; contrats de prêt, de dépôt ou de consignation ; nantissements ; engagements de non-revente ; droits de reproduction.", "Qui détient chaque œuvre, et chaque échéance suivie pour vous.", 0],
+    ["Les frais de votre collection", "Toutes les factures liées à vos œuvres : stockage, transport, assurance, restauration, encadrement.", "Une vision complète de ce que représente votre collection, entité par entité.", 0]],
   twoT: "Deux façons de déposer, à combiner librement",
   twoP: "Vous pouvez utiliser l’une, l’autre, ou les deux à la fois : ce que vous avez déjà classé, déposez-le dans la bonne rubrique ; tout le reste, déposez-le simplement en vrac. Tout est possible, et nous nous occupons du reste.",
   c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
@@ -163,12 +185,12 @@ fr: {
     ["Photographies des œuvres", "Vues de face, verso, signature, étiquettes au dos : toutes vos images, même prises au téléphone."],
     ["Certificats d’authenticité", "Certificats, avis de comité ou de fondation, références de catalogue raisonné."],
     ["Assurance", "Polices en cours, conditions particulières, inventaires assurés, échanges avec votre courtier."],
-    ["Constats d’état et restaurations", "Constats d’état, rapports et factures de restauration."],
+    ["Constats d’état et restaurations", "Condition reports, rapports et factures de restauration."],
     ["Estimations", "Estimations de galeries, d’experts ou de maisons de vente."],
     ["Provenance, expositions, publications", "Catalogues, publications, échanges avec les galeries, historique de l’œuvre."],
     ["Transport, douane et encadrement", "Factures de transport, documents de douane et d’export, encadrement, emballage, caisses."],
     ["Propriété, prêts et contrats", "Sociétés, trusts, copropriété, contrats de prêt, de dépôt ou de consignation."],
-    ["Autres documents", "Tout ce qui concerne vos œuvres et ne trouve pas sa place ailleurs : correspondances, notes, coûts passés."]],
+    ["Frais et autres documents", "Factures de vos frais passés et tout ce qui concerne vos œuvres : correspondances, notes."]],
   qT: "Une question ?", qP: "Écrivez-nous ici : votre message nous parvient aussitôt, et notre réponse vous est adressée par email.",
   qPh: "Votre question", qSend: "Envoyer", qDone: "Votre message nous est bien parvenu. Nous vous répondons très rapidement.",
   linkT: "Beaucoup de documents ? Un simple lien suffit.", linkP: "Si vous ou votre assistant préférez nous transmettre l’ensemble en une seule fois, par WeTransfer, Dropbox, Google Drive ou tout autre service, collez simplement le lien ici. Vous pouvez aussi l’adresser à office@legacy-shaper.com.",
@@ -195,10 +217,22 @@ en: {
   phEnd: "At every step, we do the work for you.",
   exT: "The more you entrust to us, the more complete our analysis will be.",
   exP: "We take care of all the sorting; your part is simply to share what you have. Please feel free to send us what you regard as drafts as well: a rough spreadsheet, an unfinished list, notes. Every element helps us cross-check the information, locate each of your works and deliver, at the end of phase 1, a clear and rigorous first analysis.",
-  essT: "The essentials to begin with",
-  ess: ["Your list of works or your Excel spreadsheet, however brief, ideally with the location, dimensions and value of each work.",
-        "Where your works are kept: invoices and agreements from your storage facilities, their letters and confirmations, your deposit and receipt certificates.",
-        "Your purchase invoices and auction statements.", "Photographs of your works, of any kind."],
+  essT: "What you may entrust to us, and what we do with it for you",
+  essP: "Send us everything you have, without sorting anything: each document finds its place in our analysis.",
+  prio: "First of all", forYou: "For you",
+  ess: [
+    ["Your inventory", "Excel spreadsheet, insurance list, family office list, export from your collection software, however brief or in draft; ideally with the location, dimensions and value of each work.", "A single inventory, harmonised with the documents of the galleries and auction houses.", 1],
+    ["Where your works are kept", "Invoices and agreements from your storage facilities and free ports, letters, deposit confirmations and certificates, inventories drawn up by these facilities.", "Each work located with certainty, and each location matched against your insurance.", 1],
+    ["Your acquisitions", "Gallery invoices, auction statements, private sale agreements, proofs of payment; for a work received by inheritance or gift, the deed or notarial inventory.", "For each work: date, seller, purchase price and owning entity established.", 0],
+    ["Your photographs", "Front views, reverse, signature, labels on the back, details, installation views, even taken with your phone.", "A reference image for each work; any that are missing, we obtain.", 0],
+    ["Authenticity", "Certificates of authenticity, committee or foundation opinions, catalogue raisonné references; for design, the publisher’s or manufacturer’s documents.", "The authenticity of each work documented and verified at the source.", 0],
+    ["Your insurance", "Current and previous policies, schedules, inventory of insured works, endorsements, certificates, your broker’s details.", "A complete review of each work’s cover: values, locations covered, renewal dates.", 0],
+    ["Condition and conservation", "Condition reports, conservation reports and invoices.", "The record of each work’s condition, on which insurance, shipping and loans all rely.", 0],
+    ["Your valuations", "Valuations and appraisal reports by galleries, experts or auction houses.", "Up-to-date values, matched against your insured values.", 0],
+    ["Provenance and history", "Exhibition catalogues, publications, correspondence with galleries and artists.", "The history of each work, on which its value rests.", 0],
+    ["Shipping, customs and framing", "Shipping invoices, customs documents, tax status and import VAT, temporary admissions, export licences, CITES, framing, crates.", "The customs and tax status of each work, and its shipping conditions.", 0],
+    ["Ownership, loans and commitments", "Companies, trusts, joint ownership; loan, deposit or consignment agreements; pledges; resale restrictions; reproduction rights.", "Who holds each work, and every deadline followed for you.", 0],
+    ["The costs of your collection", "All invoices relating to your works: storage, shipping, insurance, conservation, framing.", "A complete view of what your collection represents, entity by entity.", 0]],
   twoT: "Two ways to upload, to combine as you wish",
   twoP: "You may use one, the other, or both at once: what you have already sorted, upload into the right section; everything else, simply upload all together. Everything is possible, and we take care of the rest.",
   c1T: "1 · Everything at once", c1S: "The simplest way: upload all your documents here, even mixed together, even a whole folder. We sort them for you.",
@@ -219,7 +253,7 @@ en: {
     ["Provenance, exhibitions, publications", "Catalogues, publications, correspondence with galleries, history of the work."],
     ["Shipping, customs and framing", "Shipping invoices, customs and export documents, framing, packing, crates."],
     ["Ownership, loans and agreements", "Companies, trusts, co-ownership, loan, deposit or consignment agreements."],
-    ["Other documents", "Anything relating to your works that has no other place: correspondence, notes, past costs."]],
+    ["Costs and other documents", "Invoices for past costs and anything else relating to your works: correspondence, notes."]],
   qT: "A question?", qP: "Write to us here: your message reaches us at once, and our reply is sent to you by email.",
   qPh: "Your question", qSend: "Send", qDone: "Your message has reached us. We will reply very shortly.",
   linkT: "Many documents? A simple link is enough.", linkP: "If you or your assistant would rather send everything in one go, through WeTransfer, Dropbox, Google Drive or any other service, simply paste the link here. You may also send it to office@legacy-shaper.com.",
@@ -260,7 +294,8 @@ function render() {
     <div class="ph"><b>${esc(t.ph2T)}</b><p>${esc(t.ph2P)}</p></div>
     <p class="phend">${esc(t.phEnd)}</p></section>
   <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
-  <section><h2>${esc(t.essT)}</h2><ol class="ess">${t.ess.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
+  <section class="essw"><h2>${esc(t.essT)}</h2><p class="sub">${esc(t.essP)}</p>
+    <ol class="ess">${t.ess.map(([h, d, y, pr], i) => `<li><span class="n">${i + 1}</span><div><b>${esc(h)}</b>${pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}<p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p></div></li>`).join("")}</ol></section>
   <h2 class="two">${esc(t.twoT)}</h2>
   <p class="twop">${esc(t.twoP)}</p>
   ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}

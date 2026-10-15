@@ -100,6 +100,7 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 .link b{display:block;font:500 20px/1.3 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-bottom:4px}
 .link p{font-size:14px;color:var(--muted);margin:0 0 10px}
 .link small{color:var(--muted);overflow-wrap:anywhere}
+.twop{text-align:center;max-width:560px;margin:6px auto 12px;font-size:15px}
 .hidden{display:none!important}
 </style>
 </head>
@@ -147,9 +148,10 @@ fr: {
   ess: ["Votre liste d’œuvres ou votre tableau Excel, même sommaire, idéalement avec l’emplacement de chaque œuvre, ses dimensions et sa valeur.",
         "Où se trouvent vos œuvres : les factures et contrats de vos lieux de stockage, leurs courriers et confirmations, vos certificats de dépôt et de prise en charge.",
         "Vos factures d’achat et bordereaux d’adjudication.", "Les photographies de vos œuvres, quelles qu’elles soient."],
-  twoT: "Deux façons de déposer, à votre convenance",
+  twoT: "Deux façons de déposer, à combiner librement",
+  twoP: "Vous pouvez utiliser l’une, l’autre, ou les deux à la fois : ce que vous avez déjà classé, déposez-le dans la bonne rubrique ; tout le reste, déposez-le simplement en vrac. Tout est possible, et nous nous occupons du reste.",
   c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
-  c2T: "2 · Classé par vos soins", c2S: "Si vos documents sont déjà organisés, vous pouvez les déposer directement dans les rubriques ci-dessous.",
+  c2T: "2 · Classé par vos soins", c2S: "Les documents que vous avez déjà classés peuvent aller directement dans les rubriques ci-dessous, en complément de votre dépôt en vrac.",
   doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
   dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir",
   formats: "Tous les formats habituels sont acceptés : PDF, photos (JPEG, PNG, ainsi que les photos d’iPhone), Excel, Word, emails et dossiers compressés (ZIP).", photo: "Photographier un document", files: "Choisir des fichiers",
@@ -197,9 +199,10 @@ en: {
   ess: ["Your list of works or your Excel spreadsheet, however brief, ideally with the location, dimensions and value of each work.",
         "Where your works are kept: invoices and agreements from your storage facilities, their letters and confirmations, your deposit and receipt certificates.",
         "Your purchase invoices and auction statements.", "Photographs of your works, of any kind."],
-  twoT: "Two ways to upload, as you prefer",
+  twoT: "Two ways to upload, to combine as you wish",
+  twoP: "You may use one, the other, or both at once: what you have already sorted, upload into the right section; everything else, simply upload all together. Everything is possible, and we take care of the rest.",
   c1T: "1 · Everything at once", c1S: "The simplest way: upload all your documents here, even mixed together, even a whole folder. We sort them for you.",
-  c2T: "2 · Sorted by you", c2S: "If your documents are already organised, you may upload them directly into the sections below.",
+  c2T: "2 · Sorted by you", c2S: "Documents you have already sorted can go straight into the sections below, alongside your general upload.",
   doubt: "Unsure of the right section? Simply upload the document under “Everything at once”: we will take care of it, that is our role.",
   dropB: "Drop your files here", dropS: "or tap to choose them",
   formats: "All the usual formats are accepted: PDF, photos (JPEG, PNG, as well as iPhone photos), Excel, Word, emails and compressed folders (ZIP).", photo: "Photograph a document", files: "Choose files",
@@ -259,6 +262,7 @@ function render() {
   <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
   <section><h2>${esc(t.essT)}</h2><ol class="ess">${t.ess.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
   <h2 class="two">${esc(t.twoT)}</h2>
+  <p class="twop">${esc(t.twoP)}</p>
   ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}
   <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${bulk.length ? esc(t.received(bulk.length)) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>

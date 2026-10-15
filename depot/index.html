@@ -87,6 +87,7 @@ section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
 .doubt{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:14px;margin:6px 0 4px}
 .cath{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .btn.sm{padding:10px 16px;min-height:40px;font-size:11px;letter-spacing:2px;flex:0 0 auto}
+.formats{font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:12px 0 0}
 .hidden{display:none!important}
 </style>
 </head>
@@ -107,7 +108,7 @@ section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
   <main id="main" class="hidden"></main>
   <div class="foot">Legacy Shaper · Collection Office · <span data-t="conf"></span></div>
 </div>
-<input type="file" id="pick" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv,.eml,.msg,.zip,image/*,application/pdf">
+<input type="file" id="pick" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv,.numbers,.pages,.eml,.msg,.zip,image/*,application/pdf">
 <input type="file" id="cam" hidden accept="image/*" capture="environment">
 <script>
 "use strict";
@@ -134,7 +135,8 @@ fr: {
   c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
   c2T: "2 · Classé par vos soins", c2S: "Si vos documents sont déjà organisés, vous pouvez les déposer directement dans les rubriques ci-dessous.",
   doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
-  dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir", photo: "Photographier un document", files: "Choisir des fichiers",
+  dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir",
+  formats: "Tous les formats habituels sont acceptés : PDF, photos (JPEG, PNG, ainsi que les photos d’iPhone), Excel, Word, emails et dossiers compressés (ZIP).", photo: "Photographier un document", files: "Choisir des fichiers",
   share: "Déposer", received: n => n === 1 ? "1 document reçu" : n + " documents reçus", now: "à l’instant", total: n => n === 1 ? "1 document reçu au total" : n + " documents reçus au total",
   cats: [
     ["Liste ou tableau de vos œuvres", "Excel, PDF, liste du family office, inventaire, même incomplet ou en brouillon."],
@@ -175,7 +177,8 @@ en: {
   c1T: "1 · Everything at once", c1S: "The simplest way: upload all your documents here, even mixed together, even a whole folder. We sort them for you.",
   c2T: "2 · Sorted by you", c2S: "If your documents are already organised, you may upload them directly into the sections below.",
   doubt: "Unsure of the right section? Simply upload the document under “Everything at once”: we will take care of it, that is our role.",
-  dropB: "Drop your files here", dropS: "or tap to choose them", photo: "Photograph a document", files: "Choose files",
+  dropB: "Drop your files here", dropS: "or tap to choose them",
+  formats: "All the usual formats are accepted: PDF, photos (JPEG, PNG, as well as iPhone photos), Excel, Word, emails and compressed folders (ZIP).", photo: "Photograph a document", files: "Choose files",
   share: "Upload", received: n => n === 1 ? "1 document received" : n + " documents received", now: "just now", total: n => n === 1 ? "1 document received in total" : n + " documents received in total",
   cats: [
     ["List or spreadsheet of your works", "Excel, PDF, family office list, inventory, even incomplete or in draft."],
@@ -227,10 +230,12 @@ function render() {
   ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}
   <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${bulk.length ? esc(t.received(bulk.length)) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
+    <p class="formats">${esc(t.formats)}</p>
     <div class="acts"><button type="button" class="btn ghost" id="camBtn">${esc(t.photo)}</button><button type="button" class="btn ghost" id="pickBtn">${esc(t.files)}</button></div>
     ${listHTML(bulk)}</section>
   <section class="choice"><h2>${esc(t.c2T)}</h2><p class="sub">${esc(t.c2S)}</p>
     <div class="doubt">${esc(t.doubt)}</div>
+    <p class="formats" style="margin-top:10px">${esc(t.formats)}</p>
     ${CAT_KEYS.map(catHTML).join("")}</section>
   <section><h2>${esc(t.mailT)}</h2><p class="sub">${esc(t.mailP)}</p></section>
   <section><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>

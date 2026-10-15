@@ -76,6 +76,17 @@ canvas.sig{display:block;width:100%;height:150px;border:1px solid rgba(36,74,48,
 .done p{font:400 21px/1.5 "Cormorant Garamond",Georgia,serif;max-width:540px;margin:0 auto 12px}
 .note{font-size:14px;color:var(--muted);text-align:center;margin:10px auto 0;max-width:560px}
 .foot{text-align:center;font:500 10px/1.6 "Hanken Grotesk",sans-serif;letter-spacing:3px;text-transform:uppercase;color:var(--goldtxt);margin-top:30px}
+.exergue{background:var(--deep);color:var(--ivory);border-radius:14px;padding:20px 18px;margin:0 0 18px;border-left:4px solid var(--gold)}
+.exergue b{display:block;font:500 23px/1.25 "Cormorant Garamond",Georgia,serif;color:var(--soft);margin-bottom:8px}
+.exergue p{margin:0;font-size:15px;line-height:1.6}
+ol.ess{margin:8px 0 6px;padding-left:22px}
+ol.ess li{margin:0 0 10px;font-size:15px}
+h2.two{text-align:center;display:block;margin:30px 0 4px}
+.total{text-align:center;color:var(--green);font-size:14px;margin:0}
+section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
+.doubt{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:14px;margin:6px 0 4px}
+.cath{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.btn.sm{padding:10px 16px;min-height:40px;font-size:11px;letter-spacing:2px;flex:0 0 auto}
 .hidden{display:none!important}
 </style>
 </head>
@@ -100,195 +111,140 @@ canvas.sig{display:block;width:100%;height:150px;border:1px solid rgba(36,74,48,
 <input type="file" id="cam" hidden accept="image/*" capture="environment">
 <script>
 "use strict";
-/* Espace de dépôt du Collection Office (docs/ONBOARDING.md § 2) — 15 Oct 2026, first screen, shown to Dylan in preview
-   (?preview=1&lang=fr|en) before anything is connected: nothing is uploaded, saved or sent in preview.
-   Mailbox principle: the client deposits, never re-reads what was deposited (names and a counter only). */
+/* Espace de dépôt du Collection Office, phase 1 (docs/ONBOARDING.md § 2, revised with Dylan on 15 Oct 2026): documents only,
+   two ways — everything at once, or sorted by the client into 12 sections (doubt → « Tout en vrac »). Mockup for validation
+   (?preview=1&lang=fr|en): nothing is uploaded, saved or sent. Mailbox principle: names and counters only, never the content. */
 const Q = new URLSearchParams(location.search);
 const PREVIEW = Q.get("preview") === "1";
 const T = {
 fr: {
-  kick: "Collection Office", title: "Votre espace de dépôt",
-  lead: "Déposez vos documents comme ils viennent : nous les trions, les rattachons à chaque œuvre et vous signalons ce qui reste à réunir.",
-  how: "Vous pouvez revenir ici autant de fois que vous le souhaitez : tout ce que vous déposez nous parvient aussitôt et reste strictement confidentiel. Par discrétion, cette page affiche le nom des documents reçus, jamais leur contenu.",
+  kick: "Collection Office · Phase 1", title: "Votre espace de dépôt",
+  lead: "Déposez-y vos documents tels qu’ils se présentent, sous toutes leurs formes : fichiers, scans, simples photographies prises avec votre téléphone, même imparfaites. Vous pouvez le faire en une fois ou au fil des jours, sans vous soucier de les trier : c’est notre travail. Nous les lisons, les classons et les rattachons à chacune de vos œuvres.",
+  how: "Par discrétion, cette page affiche le nom des documents reçus, jamais leur contenu.",
   loading: "Ouverture de votre espace…", conf: "Strictement confidentiel",
   invalid: "Ce lien n’est plus actif. Pour tout envoi, écrivez simplement à office@legacy-shaper.com : nous vous adresserons un nouveau lien.",
   previewNote: "Aperçu : rien n’est envoyé ni enregistré. Le client verra cette page avec son lien personnel.",
-  pWorks: "Vos œuvres", pDocs: "Documents d’ensemble", pPlaces: "Lieux", pPeople: "Interlocuteurs",
-  bulkT: "Déposez tout, en vrac", bulkS: "Tableurs, factures, certificats, photographies, emails, dossiers entiers : tout est bienvenu, même incomplet.",
+  exT: "Plus vous nous confiez d’éléments, plus notre analyse sera complète.",
+  exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : un tableau sommaire, une liste inachevée, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
+  essT: "Les essentiels pour commencer",
+  ess: ["Votre liste d’œuvres ou votre tableau Excel, même sommaire, idéalement avec l’emplacement de chaque œuvre, ses dimensions et sa valeur.",
+        "Où se trouvent vos œuvres : les factures et contrats de vos lieux de stockage, leurs courriers et confirmations, vos certificats de dépôt et de prise en charge.",
+        "Vos factures d’achat et bordereaux d’adjudication.", "Les photographies de vos œuvres, quelles qu’elles soient."],
+  twoT: "Deux façons de déposer, à votre convenance",
+  c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
+  c2T: "2 · Classé par vos soins", c2S: "Si vos documents sont déjà organisés, vous pouvez les déposer directement dans les rubriques ci-dessous.",
+  doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
   dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir", photo: "Photographier un document", files: "Choisir des fichiers",
-  received: n => n === 1 ? "1 document reçu" : n + " documents reçus", now: "à l’instant",
-  aT: "A · Vos œuvres", aS: "Pour chaque ligne, la réponse qui vous convient : rien n’est obligatoire.",
-  bT: "B · Documents d’ensemble",
-  ans: ["Déposer", "Je ne l’ai pas", "Demandez-le à…", "Sans objet"], askWho: "Choisissez l’interlocuteur", askNone: "Ajoutez d’abord vos interlocuteurs plus bas.",
-  items: [
-    ["La liste de vos œuvres", "Sous la forme que vous avez : tableur, inventaire d’assurance, liste du family office, même incomplète. C’est notre point de départ."],
-    ["Photographies", "La meilleure image de chaque œuvre ; si possible le verso, la signature et les étiquettes au dos."],
-    ["Factures d’achat", "Bordereaux d’adjudication, contrats de vente privée, preuves de paiement."],
-    ["Certificats d’authenticité", "Avis de comité ou de fondation, références de catalogue raisonné."],
-    ["Constats d’état", "Constats d’état et rapports de restauration."],
-    ["Estimations et valeurs d’assurance", ""],
-    ["Provenance", "Catalogues d’exposition, publications, échanges avec les galeries."],
-    ["Douane et export", "Déclarations d’importation, admissions temporaires, licences d’exportation, CITES."],
-    ["Encadrement et emballage", "Caisses, verre, accrochage, toute fiche technique."],
-    ["Polices d’assurance en cours", "Conditions particulières et inventaire assuré ; coordonnées du courtier."],
-    ["Lieux de stockage", "Contrats, dernières factures, listes d’inventaire du storage."],
-    ["Propriété", "Entité qui détient chaque œuvre (personne, société, trust, fondation), conventions de copropriété."],
-    ["Prêts, dépôts et consignations", "Prêts, dépôts, consignations et nantissements en cours."]],
-  cT: "C · Vos lieux", cS: "Chaque adresse où se trouvent des œuvres, et la personne à joindre sur place.",
-  placeName: "Lieu", placeKinds: ["Résidence", "Bureau", "Storage ou port franc", "Yacht", "Autre"], placeKind: "Type de lieu", address: "Adresse", onSite: "Personne à joindre sur place", addPlace: "Ajouter un lieu",
-  dT: "D · Vos interlocuteurs", dS: "Galeries, maisons de vente, conseillers, assureur, storages, transporteurs, restaurateurs, avocats, family office…",
-  roles: ["Galerie", "Maison de vente", "Conseiller", "Courtier ou assureur", "Storage", "Transporteur", "Restaurateur", "Encadreur", "Avocat ou notaire", "Family office ou assistant", "Comptable", "Autre"],
-  role: "Rôle", pname: "Nom", pcompany: "Société", email: "Email", phone: "Téléphone",
-  direct: "Legacy Shaper peut le contacter directement", addPerson: "Ajouter un interlocuteur", remove: "Retirer",
-  eT: "Vos lettres d’autorisation", eS: "Une lettre par interlocuteur, pour qu’il puisse répondre à Legacy Shaper Collection FZCO en votre nom. Une seule signature suffit pour toutes.",
-  eNone: "Elles apparaîtront ici dès que vous aurez ajouté un interlocuteur que nous pouvons contacter directement.",
-  letterTo: "Lettre à", letterDraft: "Texte définitif en cours de relecture : il sera soumis à votre signature dans cette même page.",
-  letterBody: (p, c) => `Je soussigné(e) autorise Legacy Shaper Collection FZCO, et toute personne habilitée par elle, à demander et à recevoir auprès de ${c || p} toute information et tout document relatifs aux œuvres de ma collection.`,
-  sign: "Signez ici", clear: "Effacer", signAll: "Signer les lettres", signed: n => n === 1 ? "Lettre signée · une copie vous sera adressée par email." : `${n} lettres signées · une copie vous sera adressée par email.`,
-  finish: "J’ai terminé pour aujourd’hui",
-  doneP1: "Merci. Tout ce que vous avez déposé nous est bien parvenu.", doneP2: "Vous pouvez revenir sur cette page à tout moment pour compléter.",
-  previewFinish: "Aperçu : le client verra ici son message de remerciement.",
+  share: "Déposer", received: n => n === 1 ? "1 document reçu" : n + " documents reçus", now: "à l’instant", total: n => n === 1 ? "1 document reçu au total" : n + " documents reçus au total",
+  cats: [
+    ["Liste ou tableau de vos œuvres", "Excel, PDF, liste du family office, inventaire, même incomplet ou en brouillon."],
+    ["Lieux de stockage", "Factures, contrats, courriers, confirmations et certificats de dépôt, inventaires des lieux."],
+    ["Factures d’achat et bordereaux", "Factures de galeries, bordereaux d’adjudication, contrats de vente privée, preuves de paiement."],
+    ["Photographies des œuvres", "Vues de face, verso, signature, étiquettes au dos : toutes vos images, même prises au téléphone."],
+    ["Certificats d’authenticité", "Certificats, avis de comité ou de fondation, références de catalogue raisonné."],
+    ["Assurance", "Polices en cours, conditions particulières, inventaires assurés, échanges avec votre courtier."],
+    ["Constats d’état et restaurations", "Constats d’état, rapports et factures de restauration."],
+    ["Estimations", "Estimations de galeries, d’experts ou de maisons de vente."],
+    ["Provenance, expositions, publications", "Catalogues, publications, échanges avec les galeries, historique de l’œuvre."],
+    ["Transport, douane et encadrement", "Factures de transport, documents de douane et d’export, encadrement, emballage, caisses."],
+    ["Propriété, prêts et contrats", "Sociétés, trusts, copropriété, contrats de prêt, de dépôt ou de consignation."],
+    ["Autres documents", "Tout ce qui concerne vos œuvres et ne trouve pas sa place ailleurs : correspondances, notes, coûts passés."]],
+  mailT: "Par email, si vous le préférez", mailP: "Vous pouvez aussi nous adresser vos documents à office@legacy-shaper.com : ils rejoindront ce même dossier.",
+  helpT: "Une personne de votre entourage conserve des documents ?",
+  helpP: "Si votre assistant, votre avocat, votre family office ou toute autre personne de votre choix conserve une partie de ces documents, indiquez-nous qui contacter : nous lui ouvrirons un accès à son nom. Cet accès lui permettra uniquement de déposer des documents ; la consultation de votre collection et de nos analyses vous reste strictement réservée, sauf demande expresse de votre part.",
+  hName: "Nom", hEmail: "Email", hRole: "Son rôle (assistant, avocat, family office…)", hAdd: "Lui ouvrir un accès", hDone: n => `Demande d’accès bien reçue pour ${n} : nous lui adressons son lien.`,
+  endP: "Lorsque vous estimerez nous avoir transmis l’essentiel, un simple clic sur « J’ai terminé mon dépôt » nous permettra d’engager l’analyse. Le lien reste ouvert par la suite : tout document que vous retrouveriez plus tard sera le bienvenu.",
+  finish: "J’ai terminé mon dépôt",
+  doneP1: "Merci. Nous engageons l’analyse de vos documents.", doneP2: "Au terme de la phase 1, vous recevrez notre première analyse. Ce lien reste ouvert : tout document retrouvé plus tard sera le bienvenu.",
+  previewFinish: "Aperçu : le client verra ici son message de remerciement, et vous serez prévenu dans The Legacy.",
 },
 en: {
-  kick: "Collection Office", title: "Your document space",
-  lead: "Share your documents just as they are: we sort them, link them to each work and let you know what remains to be gathered.",
-  how: "You may come back here as often as you wish: everything you share reaches us at once and remains strictly confidential. For your discretion, this page shows the names of the documents received, never their content.",
+  kick: "Collection Office · Phase 1", title: "Your document space",
+  lead: "Simply upload your documents as they are, in any form: files, scans, or photographs taken with your phone, even imperfect ones. You may do so all at once or over the coming days, without worrying about sorting them: that is our job. We read them, organise them and link them to each of your works.",
+  how: "For your discretion, this page shows the names of the documents received, never their content.",
   loading: "Opening your space…", conf: "Strictly confidential",
   invalid: "This link is no longer active. To share documents, simply write to office@legacy-shaper.com and we will send you a new link.",
   previewNote: "Preview: nothing is sent or saved. The client will see this page through a personal link.",
-  pWorks: "Your works", pDocs: "General documents", pPlaces: "Places", pPeople: "Contacts",
-  bulkT: "Share everything, as it comes", bulkS: "Spreadsheets, invoices, certificates, photographs, emails, whole folders: everything is welcome, even incomplete.",
+  exT: "The more you entrust to us, the more complete our analysis will be.",
+  exP: "We take care of all the sorting; your part is simply to share what you have. Please feel free to send us what you regard as drafts as well: a rough spreadsheet, an unfinished list, notes. Every element helps us cross-check the information, locate each of your works and deliver, at the end of phase 1, a clear and rigorous first analysis.",
+  essT: "The essentials to begin with",
+  ess: ["Your list of works or your Excel spreadsheet, however brief, ideally with the location, dimensions and value of each work.",
+        "Where your works are kept: invoices and agreements from your storage facilities, their letters and confirmations, your deposit and receipt certificates.",
+        "Your purchase invoices and auction statements.", "Photographs of your works, of any kind."],
+  twoT: "Two ways to upload, as you prefer",
+  c1T: "1 · Everything at once", c1S: "The simplest way: upload all your documents here, even mixed together, even a whole folder. We sort them for you.",
+  c2T: "2 · Sorted by you", c2S: "If your documents are already organised, you may upload them directly into the sections below.",
+  doubt: "Unsure of the right section? Simply upload the document under “Everything at once”: we will take care of it, that is our role.",
   dropB: "Drop your files here", dropS: "or tap to choose them", photo: "Photograph a document", files: "Choose files",
-  received: n => n === 1 ? "1 document received" : n + " documents received", now: "just now",
-  aT: "A · Your works", aS: "For each line, the answer that suits you: nothing is mandatory.",
-  bT: "B · General documents",
-  ans: ["Share", "I don’t have it", "Please ask…", "Not applicable"], askWho: "Choose the contact", askNone: "Please add your contacts further down first.",
-  items: [
-    ["The list of your works", "In whatever form you have it: spreadsheet, insurance schedule, family office list, even incomplete. It is our starting point."],
-    ["Photographs", "The best image of each work; if possible the reverse, the signature and the labels on the back."],
-    ["Purchase invoices", "Auction invoices, private sale agreements, proofs of payment."],
-    ["Certificates of authenticity", "Committee or foundation opinions, catalogue raisonné references."],
-    ["Condition reports", "Condition and conservation reports."],
-    ["Valuations and insurance values", ""],
-    ["Provenance", "Exhibition catalogues, publications, correspondence with galleries."],
-    ["Customs and export", "Import declarations, temporary admissions, export licences, CITES."],
-    ["Framing and packing", "Crates, glazing, hanging, any technical sheet."],
-    ["Current insurance policies", "Schedule and insured inventory; broker’s details."],
-    ["Storage", "Contracts, latest invoices, storage inventory lists."],
-    ["Ownership", "The entity holding each work (person, company, trust, foundation), co-ownership agreements."],
-    ["Loans, deposits and consignments", "Current loans, deposits, consignments and pledges."]],
-  cT: "C · Your places", cS: "Each address where works are kept, and the person to contact there.",
-  placeName: "Place", placeKinds: ["Residence", "Office", "Storage or free port", "Yacht", "Other"], placeKind: "Type of place", address: "Address", onSite: "Person to contact on site", addPlace: "Add a place",
-  dT: "D · Your contacts", dS: "Galleries, auction houses, advisors, insurer, storage, shippers, conservators, lawyers, family office…",
-  roles: ["Gallery", "Auction house", "Advisor", "Broker or insurer", "Storage", "Shipper", "Conservator", "Framer", "Lawyer or notary", "Family office or assistant", "Accountant", "Other"],
-  role: "Role", pname: "Name", pcompany: "Company", email: "Email", phone: "Phone",
-  direct: "Legacy Shaper may contact them directly", addPerson: "Add a contact", remove: "Remove",
-  eT: "Your letters of authorisation", eS: "One letter per contact, so that they may answer Legacy Shaper Collection FZCO on your behalf. A single signature covers them all.",
-  eNone: "They will appear here as soon as you add a contact we may reach directly.",
-  letterTo: "Letter to", letterDraft: "Final wording under review: it will be submitted for your signature on this same page.",
-  letterBody: (p, c) => `I, the undersigned, authorise Legacy Shaper Collection FZCO, and any person authorised by it, to request and receive from ${c || p} any information and document relating to the works of my collection.`,
-  sign: "Sign here", clear: "Clear", signAll: "Sign the letters", signed: n => n === 1 ? "Letter signed · a copy will be sent to you by email." : `${n} letters signed · a copy will be sent to you by email.`,
-  finish: "I have finished for today",
-  doneP1: "Thank you. Everything you shared has reached us.", doneP2: "You may come back to this page at any time to add more.",
-  previewFinish: "Preview: the client will see the thank-you message here.",
+  share: "Upload", received: n => n === 1 ? "1 document received" : n + " documents received", now: "just now", total: n => n === 1 ? "1 document received in total" : n + " documents received in total",
+  cats: [
+    ["List or spreadsheet of your works", "Excel, PDF, family office list, inventory, even incomplete or in draft."],
+    ["Storage", "Invoices, agreements, letters, deposit confirmations and certificates, storage inventories."],
+    ["Purchase invoices and auction statements", "Gallery invoices, auction statements, private sale agreements, proofs of payment."],
+    ["Photographs of the works", "Front views, reverse, signature, labels on the back: all your images, even taken with a phone."],
+    ["Certificates of authenticity", "Certificates, committee or foundation opinions, catalogue raisonné references."],
+    ["Insurance", "Current policies, schedules, insured inventories, correspondence with your broker."],
+    ["Condition and conservation", "Condition reports, conservation reports and invoices."],
+    ["Valuations", "Valuations by galleries, experts or auction houses."],
+    ["Provenance, exhibitions, publications", "Catalogues, publications, correspondence with galleries, history of the work."],
+    ["Shipping, customs and framing", "Shipping invoices, customs and export documents, framing, packing, crates."],
+    ["Ownership, loans and agreements", "Companies, trusts, co-ownership, loan, deposit or consignment agreements."],
+    ["Other documents", "Anything relating to your works that has no other place: correspondence, notes, past costs."]],
+  mailT: "By email, if you prefer", mailP: "You are also welcome to send your documents to office@legacy-shaper.com: they will join this same file.",
+  helpT: "Does someone close to you hold documents?",
+  helpP: "If your assistant, your lawyer, your family office or anyone else of your choosing holds some of these documents, please let us know whom to contact: we will open an access in their name. This access will only allow them to upload documents; viewing your collection and our analyses remains strictly reserved to you, unless you expressly request otherwise.",
+  hName: "Name", hEmail: "Email", hRole: "Their role (assistant, lawyer, family office…)", hAdd: "Open an access", hDone: n => `Access request received for ${n}: we are sending them their link.`,
+  endP: "Once you feel you have sent us the essentials, a simple click on “I have finished uploading” will allow us to begin the analysis. The link remains open afterwards: any document you find later will be most welcome.",
+  finish: "I have finished uploading",
+  doneP1: "Thank you. We are beginning the analysis of your documents.", doneP2: "At the end of phase 1, you will receive our first analysis. This link remains open: any document found later will be most welcome.",
+  previewFinish: "Preview: the client will see the thank-you message here, and you will be notified in The Legacy.",
 }};
-const ITEM_KEYS = ["list", "photos", "invoices", "certificates", "condition", "values", "provenance", "customs", "framing", "insurance", "storage", "ownership", "loans"];
-const ANS = ["share", "none", "ask", "na"];
+const CAT_KEYS = ["list", "storage", "invoices", "photos", "certificates", "insurance", "condition", "valuations", "provenance", "shipping", "ownership", "other"];
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let lang = Q.get("lang") === "en" ? "en" : "fr";
-let S = { files: [], items: {}, places: [], people: [], signedAt: null, signedFor: [] };
-let target = null;   // the line a file is shared for (null = « en vrac »)
+let S = { files: [], helpers: [], finished: false };
+let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
 
-function letters() { return S.people.filter(p => p.direct && (p.name || p.company)); }
-function counts() {
-  const ans = k => S.items[k] && S.items[k].a;
-  return { works: ITEM_KEYS.slice(0, 9).filter(ans).length, docs: ITEM_KEYS.slice(9).filter(ans).length, places: S.places.filter(p => p.name || p.address).length, people: S.people.filter(p => p.name || p.company).length };
-}
-function itemHTML(k, i) {
-  const t = T[lang], it = S.items[k] || {}, [label, help] = t.items[i];
-  const who = S.people.filter(p => p.name || p.company);
-  const got = S.files.filter(f => f.item === k).length;
-  return `<div class="item" id="it_${k}"><p class="ql">${esc(label)}${help ? `<small>${esc(help)}</small>` : ""}</p>
-    <div class="pills" role="group">${ANS.map((a, j) => `<button type="button" class="pill" aria-pressed="${it.a === a}" data-item="${k}" data-a="${a}">${esc(t.ans[j])}</button>`).join("")}</div>
-    ${it.a === "ask" ? (who.length ? `<select class="t" data-askfor="${k}"><option value="">${esc(t.askWho)}</option>${who.map(p => `<option value="${p.id}"${it.who === p.id ? " selected" : ""}>${esc([p.name, p.company].filter(Boolean).join(" · "))}</option>`).join("")}</select>` : `<p class="sub" style="margin-top:8px">${esc(t.askNone)}</p>`) : ""}
-    ${got ? `<p class="got">✓ ${esc(t.received(got))}</p>` : ""}</div>`;
-}
-function placeHTML(p, i) {
-  const t = T[lang];
-  return `<div class="card"><div class="row2"><div><label class="f">${esc(t.placeName)}</label><input class="t" data-place="${i}" data-k="name" value="${esc(p.name)}"></div>
-    <div><label class="f">${esc(t.placeKind)}</label><select class="t" style="margin:0" data-place="${i}" data-k="kind">${t.placeKinds.map((k, j) => `<option value="${j}"${+p.kind === j ? " selected" : ""}>${esc(k)}</option>`).join("")}</select></div></div>
-    <label class="f">${esc(t.address)}</label><input class="t" data-place="${i}" data-k="address" value="${esc(p.address)}">
-    <label class="f">${esc(t.onSite)}</label><input class="t" data-place="${i}" data-k="contact" value="${esc(p.contact)}">
-    <button type="button" class="rm" data-rmplace="${i}">${esc(t.remove)}</button></div>`;
-}
-function personHTML(p, i) {
-  const t = T[lang];
-  return `<div class="card"><div class="row2"><div><label class="f">${esc(t.role)}</label><select class="t" style="margin:0" data-person="${i}" data-k="role">${t.roles.map((r, j) => `<option value="${j}"${+p.role === j ? " selected" : ""}>${esc(r)}</option>`).join("")}</select></div>
-    <div><label class="f">${esc(t.pcompany)}</label><input class="t" data-person="${i}" data-k="company" value="${esc(p.company)}"></div></div>
-    <div class="row2"><div><label class="f">${esc(t.pname)}</label><input class="t" data-person="${i}" data-k="name" value="${esc(p.name)}"></div>
-    <div><label class="f">${esc(t.email)}</label><input class="t" type="email" inputmode="email" data-person="${i}" data-k="email" value="${esc(p.email)}"></div></div>
-    <label class="f">${esc(t.phone)}</label><input class="t" type="tel" inputmode="tel" data-person="${i}" data-k="phone" value="${esc(p.phone)}">
-    <label class="chk"><input type="checkbox" data-person="${i}" data-k="direct"${p.direct ? " checked" : ""}><span>${esc(t.direct)}</span></label>
-    <button type="button" class="rm" data-rmperson="${i}">${esc(t.remove)}</button></div>`;
-}
-function lettersHTML() {
-  const t = T[lang], L = letters();
-  if (!L.length) return `<p class="sub">${esc(t.eNone)}</p>`;
-  const done = S.signedAt && L.every(p => S.signedFor.includes(p.id));
-  return L.map(p => `<div class="letter"><div class="to">${esc(t.letterTo)} ${esc([p.name, p.company].filter(Boolean).join(" · "))}</div>${esc(t.letterBody(p.name, p.company))}<div class="draft">${esc(t.letterDraft)}</div></div>`).join("")
-    + (done ? `<p class="signed">✓ ${esc(t.signed(L.length))}</p>` : `<label class="f">${esc(t.sign)}</label><canvas class="sig" id="sig"></canvas>
-      <div class="acts"><button type="button" class="btn ghost" id="sigClear">${esc(t.clear)}</button><button type="button" class="btn" id="sigOk" disabled>${esc(t.signAll)}</button></div>`);
-}
-function progressHTML() { const t = T[lang], c = counts();
-  return `<div><b>${c.works}/9</b><span>${esc(t.pWorks)}</span></div><div><b>${c.docs}/4</b><span>${esc(t.pDocs)}</span></div><div><b>${c.places}</b><span>${esc(t.pPlaces)}</span></div><div><b>${c.people}</b><span>${esc(t.pPeople)}</span></div>`; }
-/* While the client types a place or a contact, only the counters, the letters and the « Demandez-le à… » lists are
-   refreshed: the field being typed in is never redrawn (the iPhone keyboard stays open). */
-function partial() {
-  const pr = $("#progress"); if (pr) pr.innerHTML = progressHTML();
-  const lt = $("#letters"); if (lt && !(S.signedAt && letters().every(p => S.signedFor.includes(p.id)))) { lt.innerHTML = lettersHTML(); bindSig(); }
-  ITEM_KEYS.forEach((k, i) => { const it = S.items[k]; if (it && it.a === "ask") { const el = $("#it_" + k); if (el) el.outerHTML = itemHTML(k, i); } });
-  const c = counts(); document.querySelectorAll("h2 .cnt[data-c]").forEach(e => { e.textContent = c[e.dataset.c] || ""; });
+function filesOf(k) { return S.files.filter(f => f.cat === k); }
+function listHTML(fs) { const t = T[lang]; return fs.length ? `<ul class="files">${fs.slice().reverse().map(f => `<li><span>${esc(f.name)}</span><span>${esc(t.now)}</span></li>`).join("")}</ul>` : ""; }
+function catHTML(k, i) {
+  const t = T[lang], [label, help] = t.cats[i], n = filesOf(k).length;
+  return `<div class="item" id="cat_${k}"><div class="cath"><div><p class="ql">${esc(label)}<small>${esc(help)}</small></p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}</div>
+    <button type="button" class="btn ghost sm" data-cat="${k}">${esc(t.share)}</button></div></div>`;
 }
 function render() {
-  const t = T[lang], c = counts();
+  const t = T[lang];
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-t]").forEach(el => { const v = t[el.dataset.t]; if (typeof v === "string") el.textContent = v; });
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
   if (S.finished) { $("#main").innerHTML = `<section class="done"><p>${esc(t.doneP1)}</p><p>${esc(t.doneP2)}</p>${PREVIEW ? `<p class="note">${esc(t.previewFinish)}</p>` : ""}</section>`; return; }
+  const bulk = filesOf(null);
   $("#main").innerHTML = `
-  <div class="progress" id="progress" aria-live="polite">${progressHTML()}</div>
-  <section><h2>${esc(t.bulkT)}<span class="cnt">${S.files.length ? esc(t.received(S.files.length)) : ""}</span></h2><p class="sub">${esc(t.bulkS)}</p>
+  <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
+  <section><h2>${esc(t.essT)}</h2><ol class="ess">${t.ess.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
+  <h2 class="two">${esc(t.twoT)}</h2>
+  ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}
+  <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${bulk.length ? esc(t.received(bulk.length)) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
     <div class="acts"><button type="button" class="btn ghost" id="camBtn">${esc(t.photo)}</button><button type="button" class="btn ghost" id="pickBtn">${esc(t.files)}</button></div>
-    ${S.files.length ? `<ul class="files">${S.files.slice().reverse().map(f => `<li><span>${esc(f.name)}</span><span>${esc(t.now)}</span></li>`).join("")}</ul>` : ""}</section>
-  <section><h2>${esc(t.aT)}<span class="cnt">${c.works}/9</span></h2><p class="sub">${esc(t.aS)}</p>${ITEM_KEYS.slice(0, 9).map((k, i) => itemHTML(k, i)).join("")}</section>
-  <section><h2>${esc(t.bT)}<span class="cnt">${c.docs}/4</span></h2>${ITEM_KEYS.slice(9).map((k, i) => itemHTML(k, i + 9)).join("")}</section>
-  <section><h2>${esc(t.cT)}<span class="cnt" data-c="places">${c.places || ""}</span></h2><p class="sub">${esc(t.cS)}</p>${S.places.map(placeHTML).join("")}
-    <div class="acts"><button type="button" class="btn ghost" id="addPlace">${esc(t.addPlace)}</button></div></section>
-  <section><h2>${esc(t.dT)}<span class="cnt" data-c="people">${c.people || ""}</span></h2><p class="sub">${esc(t.dS)}</p>${S.people.map(personHTML).join("")}
-    <div class="acts"><button type="button" class="btn ghost" id="addPerson">${esc(t.addPerson)}</button></div></section>
-  <section><h2>${esc(t.eT)}</h2><p class="sub">${esc(t.eS)}</p><div id="letters">${lettersHTML()}</div></section>
-  <div class="acts" style="margin-top:24px"><button type="button" class="btn" id="finish">${esc(t.finish)}</button></div>`;
-  bindSig();
+    ${listHTML(bulk)}</section>
+  <section class="choice"><h2>${esc(t.c2T)}</h2><p class="sub">${esc(t.c2S)}</p>
+    <div class="doubt">${esc(t.doubt)}</div>
+    ${CAT_KEYS.map(catHTML).join("")}</section>
+  <section><h2>${esc(t.mailT)}</h2><p class="sub">${esc(t.mailP)}</p></section>
+  <section><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>
+    ${S.helpers.map(h => `<p class="signed">✓ ${esc(t.hDone(h.name))}</p>`).join("")}
+    <div class="row2"><div><label class="f" for="hName">${esc(t.hName)}</label><input class="t" id="hName" autocomplete="off"></div><div><label class="f" for="hEmail">${esc(t.hEmail)}</label><input class="t" id="hEmail" type="email" inputmode="email" autocomplete="off"></div></div>
+    <label class="f" for="hRole">${esc(t.hRole)}</label><input class="t" id="hRole" autocomplete="off">
+    <div class="acts"><button type="button" class="btn ghost" id="hAdd">${esc(t.hAdd)}</button></div></section>
+  <p class="lead" style="text-align:center;font-size:19px;margin:26px auto 0">${esc(t.endP)}</p>
+  <div class="acts" style="margin-top:18px"><button type="button" class="btn" id="finish">${esc(t.finish)}</button></div>`;
 }
 function addFiles(list) {
-  for (const f of list) S.files.push({ name: f.name || "photo.jpg", size: f.size || 0, item: target });
-  // preview: nothing leaves the device. Connected version: signed upload URL per file (function onboarding-drop), resumable.
-  if (target && S.items[target] && !S.items[target].a) S.items[target].a = "share";
+  for (const f of list) S.files.push({ name: f.name || "photo.jpg", size: f.size || 0, cat: target });
+  // preview: nothing leaves the device. Connected version: signed upload URL per file, resumable, rubric kept with the file.
   target = null; render();
-}
-function bindSig() {
-  const c = $("#sig"); if (!c) return;
-  const ok = $("#sigOk"), r = devicePixelRatio || 1; c.width = c.clientWidth * r; c.height = c.clientHeight * r;
-  const g = c.getContext("2d"); g.scale(r, r); g.lineWidth = 2.2; g.lineCap = "round"; g.strokeStyle = "#16241A";
-  let down = false, ink = 0;
-  const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-  c.onpointerdown = e => { down = true; c.setPointerCapture(e.pointerId); g.beginPath(); g.moveTo(...pos(e)); };
-  c.onpointermove = e => { if (!down) return; g.lineTo(...pos(e)); g.stroke(); if (++ink > 12) ok.disabled = false; };
-  c.onpointerup = c.onpointercancel = () => { down = false; };
-  $("#sigClear").onclick = () => { g.clearRect(0, 0, c.width, c.height); ink = 0; ok.disabled = true; };
-  ok.onclick = () => { S.signedAt = new Date().toISOString(); S.signedFor = letters().map(p => p.id); render(); };
 }
 function wire() {
   document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; render(); });
@@ -296,28 +252,14 @@ function wire() {
   $("#cam").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   const m = $("#main");
   m.addEventListener("click", e => {
-    const p = e.target.closest(".pill[data-item]"); if (p) {
-      const k = p.dataset.item, a = p.dataset.a, it = S.items[k] = S.items[k] || {};
-      if (a === "share") { it.a = "share"; target = k; $("#pick").click(); render(); return; }
-      it.a = it.a === a ? undefined : a; if (it.a !== "ask") delete it.who; render(); return; }
+    const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }
-    if (e.target.closest("#addPlace")) { S.places.push({ name: "", kind: 0, address: "", contact: "" }); render(); return; }
-    if (e.target.closest("#addPerson")) { S.people.push({ id: "p" + Date.now().toString(36), role: 0, name: "", company: "", email: "", phone: "", direct: true }); render(); return; }
-    const rp = e.target.closest("[data-rmplace]"); if (rp) { S.places.splice(+rp.dataset.rmplace, 1); render(); return; }
-    const rq = e.target.closest("[data-rmperson]"); if (rq) { const gone = S.people.splice(+rq.dataset.rmperson, 1)[0];
-      Object.values(S.items).forEach(it => { if (it.who === gone.id) delete it.who; }); render(); return; }
+    if (e.target.closest("#hAdd")) { const n = $("#hName").value.trim(), em = $("#hEmail").value.trim();
+      if (!n || !/.+@.+\..+/.test(em)) { (n ? $("#hEmail") : $("#hName")).focus(); return; }
+      S.helpers.push({ name: n, email: em, role: $("#hRole").value.trim() }); render(); return; }
     if (e.target.closest("#finish")) { S.finished = true; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
   });
-  m.addEventListener("input", e => { const el = e.target;
-    if (el.dataset.place != null) S.places[+el.dataset.place][el.dataset.k] = el.value;
-    else if (el.dataset.person != null) { const p = S.people[+el.dataset.person]; p[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; }
-    if (el.dataset.place != null || el.dataset.person != null) { clearTimeout(wire.t); wire.t = setTimeout(partial, 400); }
-    if (el.dataset.askfor) S.items[el.dataset.askfor].who = el.value; });
-  m.addEventListener("change", e => { const el = e.target; if (el.dataset.askfor) S.items[el.dataset.askfor].who = el.value;
-    if (el.dataset.place != null && el.tagName === "SELECT") S.places[+el.dataset.place].kind = +el.value;
-    if (el.dataset.person != null && el.tagName === "SELECT") S.people[+el.dataset.person].role = +el.value;
-    if (el.dataset.person != null && el.type === "checkbox") partial(); });
   m.addEventListener("dragover", e => { const d = e.target.closest("#drop"); if (d) { e.preventDefault(); d.classList.add("over"); } });
   m.addEventListener("dragleave", e => { const d = e.target.closest("#drop"); if (d) d.classList.remove("over"); });
   m.addEventListener("drop", e => { const d = e.target.closest("#drop"); if (!d) return; e.preventDefault(); target = null; addFiles(e.dataTransfer.files); });

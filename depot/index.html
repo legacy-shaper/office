@@ -88,6 +88,14 @@ section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
 .cath{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .btn.sm{padding:10px 16px;min-height:40px;font-size:11px;letter-spacing:2px;flex:0 0 auto}
 .formats{font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:12px 0 0}
+.phases .ph{border-left:3px solid var(--line);padding:4px 0 4px 14px;margin:12px 0}
+.phases .ph.on{border-left-color:var(--gold)}
+.phases .ph b{display:block;font:500 12px/1.3 "Hanken Grotesk",sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--goldtxt);margin-bottom:4px}
+.phases .ph p{margin:0;font-size:15px}
+.phend{font:italic 400 19px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green);margin:14px 0 4px}
+textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border-radius:10px;padding:11px 12px;font:400 16px/1.4 "Hanken Grotesk",sans-serif;color:var(--ink);resize:vertical}
+.qsent{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.qsent p{margin:0 0 4px;font-size:15px}.qsent span{font-size:13px;color:var(--green)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -125,6 +133,10 @@ fr: {
   loading: "Ouverture de votre espace…", conf: "Strictement confidentiel",
   invalid: "Ce lien n’est plus actif. Pour tout envoi, écrivez simplement à office@legacy-shaper.com : nous vous adresserons un nouveau lien.",
   previewNote: "Aperçu : rien n’est envoyé ni enregistré. Le client verra cette page avec son lien personnel.",
+  phT: "Votre mise en ordre, en deux phases",
+  ph1T: "Phase 1 · maintenant", ph1P: "Vous nous transmettez vos documents, ici ou par email. Nous les lisons, les trions, les croisons et les rattachons à chacune de vos œuvres. Vous recevez ensuite notre première analyse : ce que nous avons réuni, vérifié et déjà corrigé pour vous.",
+  ph2T: "Phase 2 · la phase finale", ph2P: "Nous vous indiquons les éléments qui restent à réunir. Vous nous communiquez simplement vos interlocuteurs (galeries, maisons de vente, assureur, lieux de stockage), et nous leur demandons nous-mêmes, en votre nom, tous les documents manquants. Vous suivez chaque démarche dans votre application.",
+  phEnd: "À chaque étape, nous faisons le travail à votre place.",
   exT: "Plus vous nous confiez d’éléments, plus notre analyse sera complète.",
   exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : un tableau sommaire, une liste inachevée, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
   essT: "Les essentiels pour commencer",
@@ -151,6 +163,8 @@ fr: {
     ["Transport, douane et encadrement", "Factures de transport, documents de douane et d’export, encadrement, emballage, caisses."],
     ["Propriété, prêts et contrats", "Sociétés, trusts, copropriété, contrats de prêt, de dépôt ou de consignation."],
     ["Autres documents", "Tout ce qui concerne vos œuvres et ne trouve pas sa place ailleurs : correspondances, notes, coûts passés."]],
+  qT: "Une question ?", qP: "Écrivez-nous ici : votre message nous parvient aussitôt, et notre réponse vous est adressée par email.",
+  qPh: "Votre question", qSend: "Envoyer", qDone: "Votre message nous est bien parvenu. Nous vous répondons très rapidement.",
   mailT: "Par email, si vous le préférez", mailP: "Vous pouvez aussi nous adresser vos documents à office@legacy-shaper.com : ils rejoindront ce même dossier.",
   helpT: "Une personne de votre entourage conserve des documents ?",
   helpP: "Si votre assistant, votre avocat, votre family office ou toute autre personne de votre choix conserve une partie de ces documents, indiquez-nous qui contacter : nous lui ouvrirons un accès à son nom. Cet accès lui permettra uniquement de déposer des documents ; la consultation de votre collection et de nos analyses vous reste strictement réservée, sauf demande expresse de votre part.",
@@ -167,6 +181,10 @@ en: {
   loading: "Opening your space…", conf: "Strictly confidential",
   invalid: "This link is no longer active. To share documents, simply write to office@legacy-shaper.com and we will send you a new link.",
   previewNote: "Preview: nothing is sent or saved. The client will see this page through a personal link.",
+  phT: "Putting your collection in order, in two phases",
+  ph1T: "Phase 1 · now", ph1P: "You share your documents with us, here or by email. We read, sort and cross-check them, and link them to each of your works. You then receive our first analysis: what we have gathered, verified and already corrected for you.",
+  ph2T: "Phase 2 · the final phase", ph2P: "We let you know which elements remain to be gathered. You simply give us your contacts (galleries, auction houses, insurer, storage facilities), and we ourselves request every missing document from them, on your behalf. You follow each step in your app.",
+  phEnd: "At every step, we do the work for you.",
   exT: "The more you entrust to us, the more complete our analysis will be.",
   exP: "We take care of all the sorting; your part is simply to share what you have. Please feel free to send us what you regard as drafts as well: a rough spreadsheet, an unfinished list, notes. Every element helps us cross-check the information, locate each of your works and deliver, at the end of phase 1, a clear and rigorous first analysis.",
   essT: "The essentials to begin with",
@@ -193,6 +211,8 @@ en: {
     ["Shipping, customs and framing", "Shipping invoices, customs and export documents, framing, packing, crates."],
     ["Ownership, loans and agreements", "Companies, trusts, co-ownership, loan, deposit or consignment agreements."],
     ["Other documents", "Anything relating to your works that has no other place: correspondence, notes, past costs."]],
+  qT: "A question?", qP: "Write to us here: your message reaches us at once, and our reply is sent to you by email.",
+  qPh: "Your question", qSend: "Send", qDone: "Your message has reached us. We will reply very shortly.",
   mailT: "By email, if you prefer", mailP: "You are also welcome to send your documents to office@legacy-shaper.com: they will join this same file.",
   helpT: "Does someone close to you hold documents?",
   helpP: "If your assistant, your lawyer, your family office or anyone else of your choosing holds some of these documents, please let us know whom to contact: we will open an access in their name. This access will only allow them to upload documents; viewing your collection and our analyses remains strictly reserved to you, unless you expressly request otherwise.",
@@ -206,7 +226,7 @@ const CAT_KEYS = ["list", "storage", "invoices", "photos", "certificates", "insu
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let lang = Q.get("lang") === "en" ? "en" : "fr";
-let S = { files: [], helpers: [], finished: false };
+let S = { files: [], helpers: [], questions: [], finished: false };
 let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
 
 function filesOf(k) { return S.files.filter(f => f.cat === k); }
@@ -224,6 +244,10 @@ function render() {
   if (S.finished) { $("#main").innerHTML = `<section class="done"><p>${esc(t.doneP1)}</p><p>${esc(t.doneP2)}</p>${PREVIEW ? `<p class="note">${esc(t.previewFinish)}</p>` : ""}</section>`; return; }
   const bulk = filesOf(null);
   $("#main").innerHTML = `
+  <section class="phases"><h2>${esc(t.phT)}</h2>
+    <div class="ph on"><b>${esc(t.ph1T)}</b><p>${esc(t.ph1P)}</p></div>
+    <div class="ph"><b>${esc(t.ph2T)}</b><p>${esc(t.ph2P)}</p></div>
+    <p class="phend">${esc(t.phEnd)}</p></section>
   <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
   <section><h2>${esc(t.essT)}</h2><ol class="ess">${t.ess.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
   <h2 class="two">${esc(t.twoT)}</h2>
@@ -237,6 +261,10 @@ function render() {
     <div class="doubt">${esc(t.doubt)}</div>
     <p class="formats" style="margin-top:10px">${esc(t.formats)}</p>
     ${CAT_KEYS.map(catHTML).join("")}</section>
+  <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(t.qP)}</p>
+    ${S.questions.map(q => `<div class="qsent"><p>${esc(q)}</p><span>✓ ${esc(t.qDone)}</span></div>`).join("")}
+    <textarea class="t" id="qText" rows="3" placeholder="${esc(t.qPh)}"></textarea>
+    <div class="acts"><button type="button" class="btn ghost" id="qSend">${esc(t.qSend)}</button></div></section>
   <section><h2>${esc(t.mailT)}</h2><p class="sub">${esc(t.mailP)}</p></section>
   <section><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>
     ${S.helpers.map(h => `<p class="signed">✓ ${esc(t.hDone(h.name))}</p>`).join("")}
@@ -263,6 +291,9 @@ function wire() {
     if (e.target.closest("#hAdd")) { const n = $("#hName").value.trim(), em = $("#hEmail").value.trim();
       if (!n || !/.+@.+\..+/.test(em)) { (n ? $("#hEmail") : $("#hName")).focus(); return; }
       S.helpers.push({ name: n, email: em, role: $("#hRole").value.trim() }); render(); return; }
+    if (e.target.closest("#qSend")) { const q = $("#qText").value.trim(); if (!q) { $("#qText").focus(); return; }
+      // connected version: stored with the contact's file, email + notification to Legacy Shaper; the reply goes out by email
+      S.questions.push(q); render(); $("#ask").scrollIntoView({ block: "center" }); return; }
     if (e.target.closest("#finish")) { S.finished = true; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
   });
   m.addEventListener("dragover", e => { const d = e.target.closest("#drop"); if (d) { e.preventDefault(); d.classList.add("over"); } });

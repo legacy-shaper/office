@@ -104,7 +104,8 @@ fr: {
   insQ: "Assurance", policies: "Nombre de polices", broker: "Par l’intermédiaire d’un courtier",
   ownQ: "Propriété", ownO: ["Une seule entité", "Plusieurs entités"], coowned: "Certaines œuvres sont en copropriété",
   inventory: "Inventaire existant", inventoryO: ["Pas encore formalisé", "Une liste simple", "Un tableur détaillé", "Un logiciel"],
-  assistant: "Assistant ou family office", assistantO: ["S’occupe déjà des documents", "Aucun pour l’instant"],
+  assistant: "Assistant, family office ou personne de confiance", assistantO: ["S’occupe déjà des documents", "Aucun pour l’instant"],
+  helperP: "Préférez-vous que nous menions la mise en ordre avec une personne de votre choix ? Indiquez-la simplement ici. Sans réponse, nous travaillerons directement avec vous.", helperName: "Nom", helperEmail: "Email", helperRole: "Son rôle (assistant, family office, avocat…)",
   origin: "Origine des œuvres", originO: ["Galeries", "Ventes aux enchères", "Ventes privées", "Héritage ou donation"],
   nature: "Nature des œuvres", natureO: ["Peintures", "Œuvres sur papier", "Sculptures", "Éditions et multiples", "Photographies", "Objets et mobilier"],
   multi: "Plusieurs réponses possibles", yes: "Oui", no: "Non", optional: "facultatif",
@@ -136,7 +137,8 @@ en: {
   insQ: "Insurance", policies: "Number of policies", broker: "Through a broker",
   ownQ: "Ownership", ownO: ["A single entity", "Several entities"], coowned: "Some works are jointly owned",
   inventory: "Existing inventory", inventoryO: ["Not yet formalised", "A simple list", "A detailed spreadsheet", "Dedicated software"],
-  assistant: "Assistant or family office", assistantO: ["Already looks after the documents", "None for now"],
+  assistant: "Assistant, family office or trusted person", assistantO: ["Already looks after the documents", "None for now"],
+  helperP: "Would you prefer us to conduct the putting in order with a person of your choosing? Simply name them here. Without an answer, we will work directly with you.", helperName: "Name", helperEmail: "Email", helperRole: "Their role (assistant, family office, lawyer…)",
   origin: "Origin of the works", originO: ["Galleries", "Auctions", "Private sales", "Inheritance or gift"],
   nature: "Nature of the works", natureO: ["Paintings", "Works on paper", "Sculptures", "Editions and multiples", "Photographs", "Objects and furniture"],
   multi: "Several answers possible", yes: "Yes", no: "No", optional: "optional",
@@ -217,7 +219,7 @@ function render() {
     <div class="q"><p class="ql">${esc(t.insQ)}</p><div class="row2">${txt("policies", t.policies, false, "num")}<div><label class="f">${esc(t.broker)}</label>${pills("broker", K.yn, [t.yes, t.no])}</div></div></div>
     <div class="q"><p class="ql">${esc(t.ownQ)}</p>${pills("ownership", K.own, t.ownO)}<div class="sub2"><label class="f">${esc(t.coowned)}</label>${pills("coowned", K.yn, [t.yes, t.no])}</div></div>
     <div class="q"><p class="ql">${esc(t.inventory)}</p>${pills("inventory", K.inventory, t.inventoryO)}</div>
-    <div class="q"><p class="ql">${esc(t.assistant)}</p>${pills("assistant", K.assistant, t.assistantO)}</div>
+    <div class="q"><p class="ql">${esc(t.assistant)}</p>${pills("assistant", K.assistant, t.assistantO)}<div class="sub2"><p class="sub" style="margin:10px 0 8px">${esc(t.helperP)}</p><div class="row2">${txt("helperName", t.helperName, true)}${txt("helperEmail", t.helperEmail, true)}</div><div style="margin-top:10px">${txt("helperRole", t.helperRole, true)}</div></div></div>
     <div class="q"><p class="ql">${esc(t.origin)}<span class="opt">${esc(t.multi)}</span></p>${pills("origin", K.origin, t.originO, true)}</div>
     <div class="q"><p class="ql">${esc(t.nature)}<span class="opt">${esc(t.multi)}</span></p>${pills("nature", K.nature, t.natureO, true)}</div>
   </section>

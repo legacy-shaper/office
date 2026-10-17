@@ -58,6 +58,15 @@ h2 .cnt{font:500 12px/1 "Hanken Grotesk",sans-serif;letter-spacing:1px;color:var
 .pill[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--ivory)}
 .pill:focus-visible,.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .got{font-size:13px;color:var(--green);margin-top:8px}
+.okbox{margin:16px 0 4px;border:1.5px solid var(--green);border-radius:14px;padding:14px 14px 10px;text-align:center}
+.okbox .okt{font-size:16px;color:var(--green);font-weight:600;overflow-wrap:anywhere}
+.okbox.up .okt{color:var(--goldtxt);font-weight:500}
+.okbox p{font-size:13.5px;color:var(--muted);margin:4px 0 0}
+.okbox .acts{margin-top:10px}
+.heavy{margin:16px 0 0;text-align:center}.heavy b{font-weight:600;color:var(--green)}.heavy p{font-size:13.5px;color:var(--muted);margin:4px 0 0}
+.okbox .btn,.heavy .btn{letter-spacing:1.2px;padding-left:16px;padding-right:16px;white-space:nowrap}
+.flt{margin:14px 0 0;font:500 12px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
+.files li .rc{color:var(--green);font-weight:600}
 select.t,input.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border-radius:10px;padding:11px 12px;font:400 16px/1.2 "Hanken Grotesk",sans-serif;color:var(--ink)}
 select.t{margin-top:8px}
 .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;margin:10px 0}
@@ -220,6 +229,7 @@ fr: {
   doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
   dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir",
   formats: "Tous les formats habituels sont acceptés : PDF, photos (JPEG, PNG, ainsi que les photos d’iPhone), Excel, Word, emails et dossiers compressés (ZIP).", photo: "Photographier un document", files: "Choisir des fichiers",
+  okOne: n => "Bien reçu : " + n, okMany: n => n + " documents bien reçus", okUp: "Envoi en cours…", okP: "Merci. Vous pouvez en ajouter d’autres à tout moment.", more: "Ajouter un autre document", sendLink: "Envoyer un lien de transfert", heavyT: "Des fichiers lourds ou très nombreux ?", heavyP: "Envoyez-nous simplement un lien de transfert (WeTransfer, Dropbox, Google Drive…).", listT: n => "Vos documents reçus · " + n, recv: "reçu",
   share: "Déposer", received: n => n === 1 ? "1 document reçu" : n + " documents reçus", now: "à l’instant", total: n => n === 1 ? "1 document reçu au total" : n + " documents reçus au total",
   cats: [
     ["Votre liste d’œuvres", "Fichier Excel, document Word, PDF, liste du family office, inventaire, même incomplet ou en brouillon."],
@@ -294,6 +304,7 @@ en: {
   doubt: "Unsure of the right section? Simply upload the document under “Everything at once”: we will take care of it, that is our role.",
   dropB: "Drop your files here", dropS: "or tap to choose them",
   formats: "All the usual formats are accepted: PDF, photos (JPEG, PNG, as well as iPhone photos), Excel, Word, emails and compressed folders (ZIP).", photo: "Photograph a document", files: "Choose files",
+  okOne: n => "Received: " + n, okMany: n => n + " documents received", okUp: "Uploading…", okP: "Thank you. You may add more at any time.", more: "Add another document", sendLink: "Send a transfer link", heavyT: "Large or numerous files?", heavyP: "Simply send us a transfer link (WeTransfer, Dropbox, Google Drive…).", listT: n => "Documents received · " + n, recv: "received",
   share: "Upload", received: n => n === 1 ? "1 document received" : n + " documents received", now: "just now", total: n => n === 1 ? "1 document received in total" : n + " documents received in total",
   cats: [
     ["Your list of works", "Excel file, Word document, PDF, family office list, inventory, even incomplete or in draft."],
@@ -342,15 +353,23 @@ function fileState(f) { const t = T[lang];
   if (f.st === "err") return `${esc(t.sendErr)}<button type="button" class="retry" data-retry="${S.files.indexOf(f)}">${esc(t.retry)}</button>`;
   if (f.st === "big") return esc(t.tooBig);
   if (f.st === "type") return esc(t.badType);
-  return f.at ? esc(new Date(f.at).toLocaleDateString(t.dateFmt)) : esc(t.now); }
-function listHTML(fs) { return fs.length ? `<ul class="files">${fs.slice().reverse().map(f => `<li class="${f.st || ""}"><span>${esc(f.name)}</span><span>${fileState(f)}</span></li>`).join("")}</ul>` : ""; }
+  return `<span class="rc">✓ ${esc(t.recv)}</span> · ` + (f.at ? esc(new Date(f.at).toLocaleDateString(t.dateFmt)) : esc(t.now)); }
+function listHTML(fs) { return fs.length ? `${got(fs) ? `<p class="flt">${esc(T[lang].listT(got(fs)))}</p>` : ""}<ul class="files">${fs.slice().reverse().map(f => `<li class="${f.st || ""}"><span>${esc(f.name)}</span><span>${fileState(f)}</span></li>`).join("")}</ul>` : ""; }
 const got = fs => fs.filter(f => !f.st).length;
+/* « Bien reçu » (Dylan, 17 Oct 2026: after a deposit the client must see at once that it worked, and add another document from the
+   same place): a box right where the client tapped, for the last batch, with « Ajouter un autre document » (and the camera). */
+function okBox(cat) { const B = S.batch; if (!B || B.cat !== cat) return ""; const t = T[lang];
+  const up = B.files.some(f => f.st === "up"), ok = B.files.filter(f => !f.st);
+  if (!up && !ok.length) return "";
+  const k = cat == null ? "" : ` data-morecat="${esc(cat)}"`;
+  return `<div class="okbox${up ? " up" : ""}" id="okbox"><div class="okt">${up ? esc(t.okUp) : "✓ " + esc(ok.length === 1 ? t.okOne(ok[0].name) : t.okMany(ok.length))}</div>${up ? "" : `<p>${esc(t.okP)}</p>
+    <div class="acts"><button type="button" class="btn ghost" data-more="pick"${k}>${esc(t.more)}</button><button type="button" class="btn ghost" data-more="cam"${k}>${esc(t.photo)}</button>${cat == null ? `<button type="button" class="btn ghost" data-golink="1">${esc(t.sendLink)}</button>` : ""}</div>`}</div>`; }
 /* The 12 sections as tiles (Dylan, 15 Oct 2026: « un énorme pavé à lire ») — a tile shows its title only; touching it opens what
    it covers, what Legacy Shaper does with it for the client, and its « Déposer » button. One open at a time. */
 function tileHTML(k, i) {
   const t = T[lang], [h, d, y] = t.ess[i], n = got(filesOf(k)), open = S.open === k;
   return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
-    ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}${listHTML(filesOf(k))}<button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button></div>` : ""}</div>`;
+    ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}${listHTML(filesOf(k))}<div class="acts"><button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button><button type="button" class="btn sm ghost" data-more="cam" data-morecat="${k}">${esc(t.photo)}</button></div>${okBox(k)}</div>` : ""}</div>`;
 }
 function render() {
   const t = T[lang];
@@ -378,10 +397,11 @@ function render() {
       <input class="t" id="lnk" type="url" inputmode="url" autocomplete="off" placeholder="${esc(t.linkPh)}"><p class="sub hidden" id="lnkBad">${esc(t.linkBad)}</p>
       <div class="acts"><button type="button" class="btn ghost" id="lnkSend">${esc(t.linkSend)}</button></div></div>
     <div class="acts"><button type="button" class="btn ghost" id="camBtn">${esc(t.photo)}</button><button type="button" class="btn ghost" id="pickBtn">${esc(t.files)}</button></div>
-    ${listHTML(bulk)}</section>
+    ${okBox(null)}${listHTML(bulk)}</section>
   <section class="choice"><h2>${esc(t.c2T)}</h2><p class="sub">${esc(t.c2S)}</p>
     <p class="sub">${esc(t.essP)}</p>
     <div class="tiles">${CAT_KEYS.map(tileHTML).join("")}</div>
+    <div class="heavy"><b>${esc(t.heavyT)}</b><p>${esc(t.heavyP)}</p><div class="acts"><button type="button" class="btn ghost" data-golink="1">${esc(t.sendLink)}</button></div></div>
     <div class="doubt">${esc(t.doubt)}</div></section>
   <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(t.qP)}</p>
     ${S.questions.map(q => `<div class="qsent"><p>${esc(q)}</p><span>✓ ${esc(t.qDone)}</span></div>`).join("")}
@@ -398,17 +418,20 @@ function render() {
   <div class="acts" style="margin-top:18px"><button type="button" class="btn" id="finish">${esc(t.finish)}</button></div>`;
 }
 function addFiles(list) {
+  const added = [];
   for (const f of list) {
     const name = f.name || "photo.jpg", ext = (name.match(/\.([A-Za-z0-9]{1,6})$/) || [])[1];
     const x = { name, size: f.size || 0, cat: target };
     if (!PREVIEW) { x.file = f; x.st = (f.size || 0) > MAX ? "big" : (!ext || !EXTS.includes(ext.toLowerCase())) ? "type" : "up"; }
-    S.files.push(x);
+    S.files.push(x); added.push(x);
   }
+  S.batch = { cat: target, files: added, shown: 0 };
   // preview: nothing leaves the device. Connected: each file through « deposit-drop » (signed upload URL), section kept with it.
-  target = null; render(); if (!PREVIEW) pump();
+  target = null; render(); if (!PREVIEW) pump(); else okReveal();
 }
 let busy = 0;
-function pump() { while (busy < 2) { const f = S.files.find(x => x.st === "up" && !x.go); if (!f) return; f.go = true; busy++; upload(f).finally(() => { busy--; render(); pump(); }); } }
+function okReveal() { const B = S.batch; if (!B || B.files.some(f => f.st === "up")) return; const n = B.files.filter(f => !f.st).length; if (n <= (B.shown || 0)) return; B.shown = n; const o = $("#okbox"); if (o) o.scrollIntoView({ block: "center" }); }
+function pump() { okReveal(); while (busy < 2) { const f = S.files.find(x => x.st === "up" && !x.go); if (!f) return; f.go = true; busy++; upload(f).finally(() => { busy--; render(); pump(); }); } }
 async function upload(f) {
   try {
     const b = await drop({ action: "begin", name: f.name, size: f.size, type: f.file.type || "", cat: f.cat });
@@ -436,6 +459,8 @@ function wire() {
   m.addEventListener("click", e => {
     const tl = e.target.closest("[data-tile]"); if (tl) { S.open = S.open === tl.dataset.tile ? null : tl.dataset.tile; render(); const o = $("#cat_" + tl.dataset.tile); if (o) o.scrollIntoView({ block: "nearest" }); return; }
     const rt = e.target.closest("[data-retry]"); if (rt) { const f = S.files[+rt.dataset.retry]; if (f && f.file) { f.st = "up"; render(); pump(); } return; }
+    if (e.target.closest("[data-golink]")) { const l = $("#lnk"); if (l) { l.scrollIntoView({ block: "center" }); l.focus(); } return; }
+    const mo = e.target.closest("[data-more]"); if (mo) { target = mo.dataset.morecat || null; $(mo.dataset.more === "cam" ? "#cam" : "#pick").click(); return; }
     const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }

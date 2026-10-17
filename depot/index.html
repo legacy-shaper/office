@@ -116,6 +116,11 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 .tile .tb p{margin:0 0 8px;font-size:14.5px}
 .tile .tb p.you{font:italic 400 17px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--green)}
 .tile .tb p.you span{font:500 10px/1 "Hanken Grotesk",sans-serif;font-style:normal;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldtxt)}
+.files li.up span:last-child{color:var(--goldtxt)}
+.files li.err span:last-child,.files li.big span:last-child,.files li.type span:last-child{color:#8a3b2b;white-space:normal;text-align:right;max-width:62%;min-width:0}
+.files li .retry{all:unset;cursor:pointer;color:var(--green);text-decoration:underline;margin-left:6px}
+.again{background:#fff;border:1px solid var(--gold);border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:15px;text-align:center}
+.warn{font-size:14px;color:#8a3b2b;text-align:center;margin:8px 0 0}
 .hidden{display:none!important}
 </style>
 </head>
@@ -131,8 +136,10 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
     <p class="how" data-t="how"></p>
   </div>
   <div id="previewNote" class="preview hidden" data-t="previewNote"></div>
+  <div id="selfNote" class="preview hidden" data-t="selfNote"></div>
   <div id="loading" class="note" data-t="loading"></div>
   <div id="closed" class="done hidden"><p data-t="invalid"></p></div>
+  <div id="offline" class="done hidden"><p data-t="offline"></p></div>
   <main id="main" class="hidden"></main>
   <div class="foot">Legacy Shaper · Collection Office · <span data-t="conf"></span></div>
 </div>
@@ -142,9 +149,37 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 "use strict";
 /* Espace de dépôt du Collection Office, phase 1 (docs/ONBOARDING.md § 2, revised with Dylan on 15 Oct 2026): documents only,
    two ways — everything at once, or sorted by the client into 12 sections (doubt → « Tout en vrac »). Mockup for validation
-   (?preview=1&lang=fr|en): nothing is uploaded, saved or sent. Mailbox principle: names and counters only, never the content. */
+   (?preview=1&lang=fr|en): nothing is uploaded, saved or sent. Mailbox principle: names and counters only, never the content.
+   Connected version (16 Oct 2026, SQL 025): ?k=<token>. deposit_open (language, role, names of the files received), each file
+   through the function « deposit-drop » (begin → one-time signed upload URL → PUT → done), messages (question, transfer link,
+   person to give an access to) through deposit_message, « J'ai terminé » through deposit_finish; Dylan is told by
+   « scoping-notify » (open, deposit; waves of files every 10 minutes on the server side). Same plumbing as the questionnaire. */
+const SB_URL = "https://uinwjwooodacuahqaowf.supabase.co";
+const SB_KEY = "sb_publishable_cgnIJdHGS2Xwq-lqHC_6Qw_r6zb5iRM";
 const Q = new URLSearchParams(location.search);
 const PREVIEW = Q.get("preview") === "1";
+const token = (Q.get("k") || "").toLowerCase();
+// Dylan's own checks (« Voir la page » from The Legacy adds &apercu=1) are kept apart, as for the questionnaire and the quote
+const SELF = PREVIEW || (() => { try {
+  const u = new URL(location.href);
+  if (u.searchParams.get("apercu") === "1") { localStorage.setItem("ls-self", "1"); u.searchParams.delete("apercu"); history.replaceState(null, "", u.pathname + u.search + u.hash); return true; }
+  return localStorage.getItem("ls-self") === "1"; } catch (e) { return false; } })();
+const DEVICE = (() => { const ua = navigator.userAgent || "";
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "iPad";
+  if (/iPhone|iPod/.test(ua)) return "iPhone"; if (/Android/.test(ua)) return "Android";
+  if (/Macintosh/.test(ua)) return "Mac"; if (/Windows/.test(ua)) return "Windows"; return "Ordinateur"; })();
+const MAX = 52428800;   // 50 MB a file (SQL 025): beyond, a transfer link or an email
+const EXTS = ["pdf", "jpg", "jpeg", "png", "heic", "heif", "tif", "tiff", "webp", "gif", "doc", "docx", "xls", "xlsx", "csv", "numbers", "pages", "key", "ppt", "pptx", "txt", "rtf", "eml", "msg", "zip"];
+async function rpc(name, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${name}`, { method: "POST", headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error("http " + r.status);
+  return r.json(); }
+async function drop(body) {
+  const r = await fetch(`${SB_URL}/functions/v1/deposit-drop`, { method: "POST", headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ token }, body)) });
+  if (!r.ok) throw new Error("http " + r.status);
+  return r.json(); }
+function notify(event) { if (SELF) return;
+  try { fetch(`${SB_URL}/functions/v1/scoping-notify`, { method: "POST", keepalive: true, headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ token, event }) }).catch(() => {}); } catch (e) {} }
 const T = {
 fr: {
   kick: "Collection Office · Mise en ordre, phase 1", title: "Votre espace de dépôt",
@@ -160,12 +195,12 @@ fr: {
   ph2T: "Phase 2 · la phase finale", ph2P: "Nous vous indiquons les éléments qui restent à réunir. Vous nous communiquez simplement vos interlocuteurs (galeries, maisons de vente, assureur, lieux de stockage), et nous leur demandons nous-mêmes, en votre nom, tous les documents manquants. Vous suivez chaque démarche dans votre application.",
   phEnd: "À chaque étape, nous faisons le travail à votre place.",
   exT: "Plus vous nous confiez d’éléments, plus notre analyse sera complète.",
-  exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : un tableau sommaire, une liste inachevée, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
+  exP: "Nous nous chargeons de tout le tri ; votre rôle est simplement de nous transmettre ce dont vous disposez. N’hésitez pas à nous envoyer aussi ce que vous considérez comme un brouillon : une liste d’œuvres sommaire, un fichier Excel inachevé, des notes. Chaque élément nous aide à croiser les informations, à situer chacune de vos œuvres et à vous remettre, au terme de la phase 1, une première analyse claire et rigoureuse.",
   essT: "Ce que vous pouvez nous confier, et ce que nous en faisons pour vous",
   essP: "Cette liste est un simple repère, jamais une obligation : envoyez-nous ce dont vous disposez, sans rien trier. Ce qui manque, nous le réunirons pour vous.",
   prio: "En priorité", forYou: "Pour vous",
   ess: [
-    ["Votre inventaire", "Tableau Excel, liste d’assurance, liste du family office, export de votre logiciel de collection, même sommaire ou en brouillon ; idéalement avec l’emplacement, les dimensions et la valeur de chaque œuvre.", "Un inventaire unique, harmonisé avec les documents des galeries et des maisons de vente.", 1],
+    ["Votre inventaire", "Fichier Excel, liste d’assurance, liste du family office, export de votre logiciel de collection, même sommaire ou en brouillon ; idéalement avec l’emplacement, les dimensions et la valeur de chaque œuvre.", "Un inventaire unique, harmonisé avec les documents des galeries et des maisons de vente.", 1],
     ["Vos lieux de conservation", "Factures et contrats de vos lieux de stockage et ports francs, courriers, confirmations et certificats de dépôt, inventaires établis par ces lieux.", "Chaque œuvre localisée avec certitude, et chaque lieu rapproché de votre assurance.", 1],
     ["Vos acquisitions", "Factures des galeries, bordereaux d’adjudication, contrats de vente privée, preuves de paiement ; pour une œuvre reçue en héritage ou en donation, l’acte ou l’inventaire notarié.", "Pour chaque œuvre : date, vendeur, prix d’acquisition et entité propriétaire établis.", 0],
     ["Vos photographies", "Vues de face, verso, signature, étiquettes au dos, détails, vues d’installation, même prises avec votre téléphone.", "Une image de référence pour chaque œuvre ; celles qui manquent, nous les obtenons.", 0],
@@ -181,13 +216,13 @@ fr: {
   twoP: "Vous pouvez utiliser l’une, l’autre, ou les deux à la fois : ce que vous avez déjà classé, déposez-le dans la bonne rubrique ; tout le reste, déposez-le simplement en vrac. Tout est possible, et nous nous occupons du reste.",
   c1T: "1 · Tout en vrac", c1S: "La façon la plus simple : déposez ici l’ensemble de vos documents, même mélangés, même un dossier entier. Nous les trions pour vous.",
   c2T: "2 · Classé par vos soins", c2S: "Touchez une rubrique : vous y verrez ce qu’elle comprend, ce que nous en faisons pour vous, et vous pourrez y déposer directement les documents que vous avez déjà classés.",
-  prioLine: "Pour commencer : votre tableau d’œuvres, même sommaire, et les documents de vos lieux de stockage.",
+  prioLine: "Pour commencer : votre liste d’œuvres, même sommaire, et les documents de vos lieux de stockage.",
   doubt: "Un doute sur la bonne rubrique ? Déposez simplement le document dans « Tout en vrac » : nous nous en occupons, c’est notre rôle.",
   dropB: "Glissez vos fichiers ici", dropS: "ou touchez pour les choisir",
   formats: "Tous les formats habituels sont acceptés : PDF, photos (JPEG, PNG, ainsi que les photos d’iPhone), Excel, Word, emails et dossiers compressés (ZIP).", photo: "Photographier un document", files: "Choisir des fichiers",
   share: "Déposer", received: n => n === 1 ? "1 document reçu" : n + " documents reçus", now: "à l’instant", total: n => n === 1 ? "1 document reçu au total" : n + " documents reçus au total",
   cats: [
-    ["Liste ou tableau de vos œuvres", "Excel, PDF, liste du family office, inventaire, même incomplet ou en brouillon."],
+    ["Votre liste d’œuvres", "Fichier Excel, document Word, PDF, liste du family office, inventaire, même incomplet ou en brouillon."],
     ["Lieux de stockage", "Factures, contrats, courriers, confirmations et certificats de dépôt, inventaires des lieux."],
     ["Factures d’achat et bordereaux", "Factures de galeries, bordereaux d’adjudication, contrats de vente privée, preuves de paiement."],
     ["Photographies des œuvres", "Vues de face, verso, signature, étiquettes au dos : toutes vos images, même prises au téléphone."],
@@ -209,8 +244,16 @@ fr: {
   hName: "Nom", hEmail: "Email", hRole: "Son rôle (assistant, avocat, family office…)", hAdd: "Lui ouvrir un accès", hDone: n => `Demande d’accès bien reçue pour ${n} : nous lui adressons son lien.`,
   endP: "Lorsque vous estimerez nous avoir transmis l’essentiel, un simple clic sur « J’ai terminé mon dépôt » nous permettra d’engager l’analyse. Le lien reste ouvert par la suite : tout document que vous retrouveriez plus tard sera le bienvenu.",
   finish: "J’ai terminé mon dépôt",
-  doneP1: "Merci. Nous engageons l’analyse de vos documents.", doneP2: "Au terme de la phase 1, vous recevrez notre première analyse. Ce lien reste ouvert : tout document retrouvé plus tard sera le bienvenu.",
+  doneP1: "Merci. Nous engageons l’analyse de vos documents.", doneP2: "Au terme de la phase 1, vous recevrez notre première analyse, avec l’estimation confirmée ou ajustée de la mise en ordre. Ce lien reste ouvert : tout document retrouvé plus tard sera le bienvenu.",
   previewFinish: "Aperçu : le client verra ici son message de remerciement, et vous serez prévenu dans The Legacy.",
+  selfNote: "Vous ouvrez ce lien depuis The Legacy : cette ouverture n’est pas comptée comme celle du client.",
+  offline: "La connexion semble interrompue. Les documents déjà reçus sont bien enregistrés : merci de réessayer dans un instant.",
+  sending: "envoi en cours…", sendErr: "l’envoi a été interrompu", retry: "Réessayer",
+  tooBig: "Ce fichier dépasse 50 Mo : merci de nous l’adresser par un lien de transfert (WeTransfer, par exemple) ou par email, comme indiqué ci-dessus.",
+  badType: "Ce format ne peut pas être reçu ici : merci de nous adresser ce fichier par email, à office@legacy-shaper.com.",
+  msgFail: "Votre message n’a pas pu être envoyé : merci de réessayer dans un instant.",
+  againP: "Votre dépôt est bien terminé, merci. Ce lien reste ouvert : vous pouvez encore y ajouter tout document retrouvé plus tard.",
+  dateFmt: "fr-FR",
 },
 en: {
   kick: "Collection Office · Putting in order, phase 1", title: "Your document space",
@@ -253,7 +296,7 @@ en: {
   formats: "All the usual formats are accepted: PDF, photos (JPEG, PNG, as well as iPhone photos), Excel, Word, emails and compressed folders (ZIP).", photo: "Photograph a document", files: "Choose files",
   share: "Upload", received: n => n === 1 ? "1 document received" : n + " documents received", now: "just now", total: n => n === 1 ? "1 document received in total" : n + " documents received in total",
   cats: [
-    ["List or spreadsheet of your works", "Excel, PDF, family office list, inventory, even incomplete or in draft."],
+    ["Your list of works", "Excel file, Word document, PDF, family office list, inventory, even incomplete or in draft."],
     ["Storage", "Invoices, agreements, letters, deposit confirmations and certificates, storage inventories."],
     ["Purchase invoices and auction statements", "Gallery invoices, auction statements, private sale agreements, proofs of payment."],
     ["Photographs of the works", "Front views, reverse, signature, labels on the back: all your images, even taken with a phone."],
@@ -275,24 +318,39 @@ en: {
   hName: "Name", hEmail: "Email", hRole: "Their role (assistant, lawyer, family office…)", hAdd: "Open an access", hDone: n => `Access request received for ${n}: we are sending them their link.`,
   endP: "Once you feel you have sent us the essentials, a simple click on “I have finished uploading” will allow us to begin the analysis. The link remains open afterwards: any document you find later will be most welcome.",
   finish: "I have finished uploading",
-  doneP1: "Thank you. We are beginning the analysis of your documents.", doneP2: "At the end of phase 1, you will receive our first analysis. This link remains open: any document found later will be most welcome.",
+  doneP1: "Thank you. We are beginning the analysis of your documents.", doneP2: "At the end of phase 1, you will receive our first analysis, together with the confirmed or adjusted estimate for putting your collection in order. This link remains open: any document found later will be most welcome.",
   previewFinish: "Preview: the client will see the thank-you message here, and you will be notified in The Legacy.",
+  selfNote: "You are opening this link from The Legacy: this opening is not counted as the client’s.",
+  offline: "The connection seems to be interrupted. The documents already received are safely kept: kindly try again in a moment.",
+  sending: "uploading…", sendErr: "the upload was interrupted", retry: "Try again",
+  tooBig: "This file exceeds 50 MB: kindly send it to us through a transfer link (WeTransfer, for instance) or by email, as indicated above.",
+  badType: "This format cannot be received here: kindly send this file to us by email, at office@legacy-shaper.com.",
+  msgFail: "Your message could not be sent: kindly try again in a moment.",
+  againP: "Your upload is complete, thank you. This link remains open: you may still add any document you find later.",
+  dateFmt: "en-GB",
 }};
 const CAT_KEYS = ["list", "storage", "invoices", "photos", "certificates", "insurance", "condition", "valuations", "provenance", "shipping", "ownership", "other"];
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 let lang = Q.get("lang") === "en" ? "en" : "fr";
-let S = { files: [], helpers: [], questions: [], links: [], open: null, finished: false };
+let S = { files: [], helpers: [], questions: [], links: [], open: null, finished: false, wasFinished: false, role: "client", msgErr: "" };
 let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
 
 function filesOf(k) { return S.files.filter(f => f.cat === k); }
-function listHTML(fs) { const t = T[lang]; return fs.length ? `<ul class="files">${fs.slice().reverse().map(f => `<li><span>${esc(f.name)}</span><span>${esc(t.now)}</span></li>`).join("")}</ul>` : ""; }
+function fileState(f) { const t = T[lang];
+  if (f.st === "up") return esc(t.sending);
+  if (f.st === "err") return `${esc(t.sendErr)}<button type="button" class="retry" data-retry="${S.files.indexOf(f)}">${esc(t.retry)}</button>`;
+  if (f.st === "big") return esc(t.tooBig);
+  if (f.st === "type") return esc(t.badType);
+  return f.at ? esc(new Date(f.at).toLocaleDateString(t.dateFmt)) : esc(t.now); }
+function listHTML(fs) { return fs.length ? `<ul class="files">${fs.slice().reverse().map(f => `<li class="${f.st || ""}"><span>${esc(f.name)}</span><span>${fileState(f)}</span></li>`).join("")}</ul>` : ""; }
+const got = fs => fs.filter(f => !f.st).length;
 /* The 12 sections as tiles (Dylan, 15 Oct 2026: « un énorme pavé à lire ») — a tile shows its title only; touching it opens what
    it covers, what Legacy Shaper does with it for the client, and its « Déposer » button. One open at a time. */
 function tileHTML(k, i) {
-  const t = T[lang], [h, d, y, pr] = t.ess[i], n = filesOf(k).length, open = S.open === k;
+  const t = T[lang], [h, d, y, pr] = t.ess[i], n = got(filesOf(k)), open = S.open === k;
   return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}${pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
-    ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}<button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button></div>` : ""}</div>`;
+    ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}${listHTML(filesOf(k))}<button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button></div>` : ""}</div>`;
 }
 function render() {
   const t = T[lang];
@@ -301,7 +359,7 @@ function render() {
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
   if (S.finished) { $("#main").innerHTML = `<section class="done"><p>${esc(t.doneP1)}</p><p>${esc(t.doneP2)}</p>${PREVIEW ? `<p class="note">${esc(t.previewFinish)}</p>` : ""}</section>`; return; }
   const bulk = filesOf(null);
-  $("#main").innerHTML = `
+  $("#main").innerHTML = `${S.wasFinished ? `<div class="again">${esc(t.againP)}</div>` : ""}
   <div class="reassure"><b>${esc(t.reT)}</b><p>${esc(t.reP)}</p></div>
   <section class="phases"><h2>${esc(t.phT)}</h2>
     <div class="ph on"><b>${esc(t.ph1T)}</b><p>${esc(t.ph1P)}</p></div>
@@ -310,8 +368,8 @@ function render() {
   <div class="exergue"><b>${esc(t.exT)}</b><p>${esc(t.exP)}</p></div>
   <h2 class="two">${esc(t.twoT)}</h2>
   <p class="twop">${esc(t.twoP)}</p>
-  ${S.files.length ? `<p class="total">${esc(t.total(S.files.length))}</p>` : ""}
-  <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${bulk.length ? esc(t.received(bulk.length)) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
+  ${got(S.files) ? `<p class="total">${esc(t.total(got(S.files)))}</p>` : ""}
+  <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${got(bulk) ? esc(t.received(got(bulk))) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
     <p class="prio1"><span>${esc(t.prio)}</span> ${esc(t.prioLine)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
     <p class="formats">${esc(t.formats)}</p>
@@ -330,7 +388,8 @@ function render() {
     <textarea class="t" id="qText" rows="3" placeholder="${esc(t.qPh)}"></textarea>
     <div class="acts"><button type="button" class="btn ghost" id="qSend">${esc(t.qSend)}</button></div></section>
   <section><h2>${esc(t.mailT)}</h2><p class="sub">${esc(t.mailP)}</p></section>
-  <section><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>
+  ${S.msgErr ? `<p class="warn">${esc(t.msgFail)}</p>` : ""}
+  <section${S.role === "helper" ? ' class="hidden"' : ""}><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>
     ${S.helpers.map(h => `<p class="signed">✓ ${esc(t.hDone(h.name))}</p>`).join("")}
     <div class="row2"><div><label class="f" for="hName">${esc(t.hName)}</label><input class="t" id="hName" autocomplete="off"></div><div><label class="f" for="hEmail">${esc(t.hEmail)}</label><input class="t" id="hEmail" type="email" inputmode="email" autocomplete="off"></div></div>
     <label class="f" for="hRole">${esc(t.hRole)}</label><input class="t" id="hRole" autocomplete="off">
@@ -339,9 +398,35 @@ function render() {
   <div class="acts" style="margin-top:18px"><button type="button" class="btn" id="finish">${esc(t.finish)}</button></div>`;
 }
 function addFiles(list) {
-  for (const f of list) S.files.push({ name: f.name || "photo.jpg", size: f.size || 0, cat: target });
-  // preview: nothing leaves the device. Connected version: signed upload URL per file, resumable, rubric kept with the file.
-  target = null; render();
+  for (const f of list) {
+    const name = f.name || "photo.jpg", ext = (name.match(/\.([A-Za-z0-9]{1,6})$/) || [])[1];
+    const x = { name, size: f.size || 0, cat: target };
+    if (!PREVIEW) { x.file = f; x.st = (f.size || 0) > MAX ? "big" : (!ext || !EXTS.includes(ext.toLowerCase())) ? "type" : "up"; }
+    S.files.push(x);
+  }
+  // preview: nothing leaves the device. Connected: each file through « deposit-drop » (signed upload URL), section kept with it.
+  target = null; render(); if (!PREVIEW) pump();
+}
+let busy = 0;
+function pump() { while (busy < 2) { const f = S.files.find(x => x.st === "up" && !x.go); if (!f) return; f.go = true; busy++; upload(f).finally(() => { busy--; render(); pump(); }); } }
+async function upload(f) {
+  try {
+    const b = await drop({ action: "begin", name: f.name, size: f.size, type: f.file.type || "", cat: f.cat });
+    if (!b || !b.ok) { f.st = b && b.reason === "size" ? "big" : b && b.reason === "type" ? "type" : "err"; f.go = false; return; }
+    const fd = new FormData(); fd.append("cacheControl", "3600"); fd.append("", f.file);
+    const r = await fetch(b.url, { method: "PUT", headers: { "x-upsert": "false" }, body: fd });
+    if (!r.ok) throw new Error("http " + r.status);
+    const d = await drop({ action: "done", id: b.id });
+    if (!d || !d.ok) throw new Error("not received");
+    f.st = ""; f.file = null; f.at = new Date().toISOString(); f.go = false;
+  } catch (e) { f.st = "err"; f.go = false; }
+}
+async function message(kind, body, ok) {
+  if (PREVIEW) { ok(); render(); return; }
+  try { const r = await rpc("deposit_message", { p_token: token, p_kind: kind, p_body: body });
+    if (!r || !r.ok) throw new Error("refused"); S.msgErr = ""; ok(); notify("deposit"); }
+  catch (e) { S.msgErr = kind; }
+  render();
 }
 function wire() {
   document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; render(); });
@@ -350,29 +435,47 @@ function wire() {
   const m = $("#main");
   m.addEventListener("click", e => {
     const tl = e.target.closest("[data-tile]"); if (tl) { S.open = S.open === tl.dataset.tile ? null : tl.dataset.tile; render(); const o = $("#cat_" + tl.dataset.tile); if (o) o.scrollIntoView({ block: "nearest" }); return; }
+    const rt = e.target.closest("[data-retry]"); if (rt) { const f = S.files[+rt.dataset.retry]; if (f && f.file) { f.st = "up"; render(); pump(); } return; }
     const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }
     if (e.target.closest("#hAdd")) { const n = $("#hName").value.trim(), em = $("#hEmail").value.trim();
       if (!n || !/.+@.+\..+/.test(em)) { (n ? $("#hEmail") : $("#hName")).focus(); return; }
-      S.helpers.push({ name: n, email: em, role: $("#hRole").value.trim() }); render(); return; }
+      const h = { name: n, email: em, role: $("#hRole").value.trim() }; message("helper", h, () => S.helpers.push(h)); return; }
     if (e.target.closest("#lnkSend")) { const v = $("#lnk").value.trim();
       if (!/^https:\/\/\S+\.\S+/.test(v)) { $("#lnkBad").classList.remove("hidden"); $("#lnk").focus(); return; }
       // connected version: kept with the file, Legacy Shaper notified at once (transfer links expire, often after 7 days)
-      S.links.push(v); render(); return; }
+      message("link", { url: v }, () => S.links.push(v)); return; }
     if (e.target.closest("#qSend")) { const q = $("#qText").value.trim(); if (!q) { $("#qText").focus(); return; }
       // connected version: stored with the contact's file, email + notification to Legacy Shaper; the reply goes out by email
-      S.questions.push(q); render(); $("#ask").scrollIntoView({ block: "center" }); return; }
-    if (e.target.closest("#finish")) { S.finished = true; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+      message("question", { text: q }, () => S.questions.push(q)); const a = $("#ask"); if (a) a.scrollIntoView({ block: "center" }); return; }
+    if (e.target.closest("#finish")) { finish(); }
   });
   m.addEventListener("dragover", e => { const d = e.target.closest("#drop"); if (d) { e.preventDefault(); d.classList.add("over"); } });
   m.addEventListener("dragleave", e => { const d = e.target.closest("#drop"); if (d) d.classList.remove("over"); });
   m.addEventListener("drop", e => { const d = e.target.closest("#drop"); if (!d) return; e.preventDefault(); target = null; addFiles(e.dataTransfer.files); });
 }
-function start() {
-  wire(); $("#loading").classList.add("hidden");
-  if (!PREVIEW) { $("#closed").classList.remove("hidden"); render(); return; }   // connected version comes next: until then only the preview opens
-  $("#previewNote").classList.remove("hidden"); $("#main").classList.remove("hidden"); render();
+async function finish() {
+  if (!PREVIEW) {
+    try { const r = await rpc("deposit_finish", { p_token: token }); if (!r || !r.ok) throw new Error("refused"); notify("deposit"); }
+    catch (e) { S.msgErr = "finish"; render(); return; }
+  }
+  S.finished = true; S.msgErr = ""; render(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+async function start() {
+  wire();
+  if (PREVIEW) { $("#loading").classList.add("hidden"); $("#previewNote").classList.remove("hidden"); $("#main").classList.remove("hidden"); render(); return; }
+  if (!/^[0-9a-f]{32}$/.test(token)) { $("#loading").classList.add("hidden"); $("#closed").classList.remove("hidden"); render(); return; }
+  let r;
+  try { r = await rpc("deposit_open", { p_token: token, p_device: DEVICE, p_self: SELF }); }
+  catch (e) { $("#loading").classList.add("hidden"); $("#offline").classList.remove("hidden"); render(); return; }
+  $("#loading").classList.add("hidden");
+  if (!r || !r.ok) { $("#closed").classList.remove("hidden"); render(); return; }
+  if (!Q.get("lang")) lang = r.lang === "en" ? "en" : "fr";
+  S.role = r.role === "helper" ? "helper" : "client"; S.wasFinished = !!r.finished;
+  S.files = (r.files || []).map(f => ({ name: f.name, cat: f.cat || null, at: f.at }));
+  if (SELF) $("#selfNote").classList.remove("hidden"); else notify("open");
+  $("#main").classList.remove("hidden"); render();
 }
 start();
 </script>

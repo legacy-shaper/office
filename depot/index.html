@@ -348,8 +348,8 @@ const got = fs => fs.filter(f => !f.st).length;
 /* The 12 sections as tiles (Dylan, 15 Oct 2026: « un énorme pavé à lire ») — a tile shows its title only; touching it opens what
    it covers, what Legacy Shaper does with it for the client, and its « Déposer » button. One open at a time. */
 function tileHTML(k, i) {
-  const t = T[lang], [h, d, y, pr] = t.ess[i], n = got(filesOf(k)), open = S.open === k;
-  return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}${pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
+  const t = T[lang], [h, d, y] = t.ess[i], n = got(filesOf(k)), open = S.open === k;
+  return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
     ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}${listHTML(filesOf(k))}<button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button></div>` : ""}</div>`;
 }
 function render() {
@@ -370,7 +370,7 @@ function render() {
   <p class="twop">${esc(t.twoP)}</p>
   ${got(S.files) ? `<p class="total">${esc(t.total(got(S.files)))}</p>` : ""}
   <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${got(bulk) ? esc(t.received(got(bulk))) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
-    <p class="prio1"><span>${esc(t.prio)}</span> ${esc(t.prioLine)}</p>
+    <p class="prio1">${esc(t.prioLine)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
     <p class="formats">${esc(t.formats)}</p>
     <div class="link"><b>${esc(t.linkT)}</b><p>${esc(t.linkP)}</p>

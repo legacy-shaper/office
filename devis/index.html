@@ -261,7 +261,7 @@ function blocks(body) {
     if (lines.every(l => /^- /.test(l))) return `<ul class="clean">${lines.map(l => `<li>${inline(l.slice(2))}</li>`).join("")}</ul>`;
     if (lines.every(l => /^\+ /.test(l))) return `<div class="steps">${lines.map(l => `<div><p>${inline(l.slice(2))}</p></div>`).join("")}</div>`;
     if (/^# /.test(b)) return `<p class="statement">${inline(b.slice(2))}</p>`;
-    if (/^> /.test(b)) return `<p class="box">${inline(b.slice(2))}</p>`;
+    if (/^> /.test(b)) return `<p class="box">${b.slice(2).split("\n").map(inline).join("<br>")}</p>`;   // a box may hold several lines (« Une estimation, et non un forfait », 17 Oct 2026)
     if (/^~ /.test(b)) return `<p class="small">${inline(b.slice(2))}</p>`;
     return `<p>${lines.map(inline).join("<br>")}</p>`;
   }).join("");

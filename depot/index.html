@@ -124,6 +124,9 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 .tile .n{font:500 22px/1 "Cormorant Garamond",Georgia,serif;color:var(--gold);flex:0 0 auto}
 .tile .tt{font:500 17px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--green);flex:1}
 .tile .prio{display:block;width:max-content;margin-top:5px;font:500 9px/1 "Hanken Grotesk",sans-serif;letter-spacing:1.3px;text-transform:uppercase;font-style:normal;color:var(--ivory);background:var(--gold);border-radius:999px;padding:4px 7px}
+.c1row{display:grid;gap:0 14px;align-items:start}
+@media (min-width:700px){.c1row{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.phbox h2{margin-bottom:6px}
 .tile .tc{font-size:12px;color:var(--green);flex:0 0 auto}
 .tile .tb{padding:0 14px 14px 40px;margin-top:-4px}
 .tile .tb p{margin:0 0 8px;font-size:14.5px}
@@ -158,6 +161,8 @@ textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border
 </div>
 <input type="file" id="pick" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv,.numbers,.pages,.eml,.msg,.zip,image/*,application/pdf">
 <input type="file" id="cam" hidden accept="image/*" capture="environment">
+<!-- « Déposer vos photos » (Dylan, 20/10/2026) : sans capture, pour que l’iPhone propose Photothèque / Prendre une photo / Choisir un fichier -->
+<input type="file" id="pickPh" multiple hidden accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.tif,.tiff">
 <script>
 "use strict";
 /* Espace de dépôt du Collection Office, phase 1 (docs/ONBOARDING.md § 2, revised with Dylan on 15 Oct 2026): documents only,
@@ -359,6 +364,23 @@ const ESSAI_TXT = (() => { try { const e = new URLSearchParams(location.search).
   return localStorage.getItem("ls-essai-afaire") === "1"; } catch (x) { return false; } })();
 const enAlign = o => { if (!ESSAI_TXT) return o; for (const k in o) { const v = o[k]; if (typeof v === "string") o[k] = EN_ALIGN.reduce((s, [a, b]) => s.split(a).join(b), v); else if (v && typeof v === "object") enAlign(v); } return o; };
 enAlign(T);
+/* Photos HD, page de dépôt (Dylan, 20/10/2026, 21 h 58, « 1 oui, 2 oui, 3 oui, 4 oui » ; docs/maquettes/depot-photos-avant-apres.html) : textes repris
+   mot pour mot, avec la règle du 19/10 gardée (Dylan, 20/10/2026, « A » : sans « même sommaire » / « however brief », « Chacune nous est précieuse. » / « Each one is invaluable to us. ») ; « Vos photographies » en priorité et en 3e position ; encadré « Vos photos » à côté de « Tout en vrac ». Sous l'essai jusqu'à
+   l'essai de Dylan sur son vrai iPhone. */
+const PHOTOS = {
+  fr: { prioLine: "Pour commencer : votre liste d’œuvres, les documents de vos lieux de stockage, et toutes les photographies de vos œuvres dont vous disposez.",
+    ess: ["Vos photographies", "Toutes les images de vos œuvres, sous toutes leurs formes : photos prises avec votre téléphone, fichiers JPEG reçus d’une galerie, de votre family office ou de votre assureur ; vues de face, verso, signature, étiquettes au dos, détails, vues d’installation. Chacune nous est précieuse.",
+      "Les photographies sont le cœur de votre collection numérique : une image de référence en haute définition pour chaque œuvre ; celles qui manquent, nous les demandons pour vous aux galeries et aux maisons de vente.", 1],
+    cat: ["Photographies des œuvres", "Toutes vos images, même prises au téléphone : fichiers JPEG reçus des galeries ou de votre assureur, vues de face, verso, signature, étiquettes au dos."],
+    photoT: "Vos photos", photoS: "Toutes les images de vos œuvres : celles de votre téléphone comme les fichiers JPEG reçus de vos galeries. Chacune nous est précieuse.", photoB: "Déposer vos photos" },
+  en: { prioLine: "To begin with: your list of works, the documents from your storage facilities, and all the photographs of your works in your possession.",
+    ess: ["Your photographs", "Every image of your works, in whatever form: photographs taken with your phone, JPEG files received from a gallery, your family office or your insurer; front views, reverse, signature, labels on the back, details, installation views. Each one is invaluable to us.",
+      "Photographs are the heart of your digital collection: a high-definition reference image for each work; any that are missing, we request on your behalf from the galleries and auction houses.", 1],
+    cat: ["Photographs of the works", "All your images, even taken with a phone: JPEG files received from galleries or your insurer, front views, reverse, signature, labels on the back."],
+    photoT: "Your photos", photoS: "Every image of your works: those on your phone as well as the JPEG files received from your galleries. Each one is invaluable to us.", photoB: "Upload your photos" } };
+const PH_I = CAT_KEYS.indexOf("photos");
+if (ESSAI_TXT) for (const l of ["fr", "en"]) { const t = T[l], P = PHOTOS[l]; t.prioLine = P.prioLine; t.ess[PH_I] = P.ess; t.cats[PH_I] = P.cat; t.photoT = P.photoT; t.photoS = P.photoS; t.photoB = P.photoB; }
+const TILE_ORDER = ESSAI_TXT ? ["list", "storage", "photos"].concat(CAT_KEYS.filter(k => !["list", "storage", "photos"].includes(k))) : CAT_KEYS;
 let lang = Q.get("lang") === "en" ? "en" : "fr";
 let S = { files: [], helpers: [], questions: [], links: [], open: null, finished: false, wasFinished: false, role: "client", msgErr: "" };
 let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
@@ -383,8 +405,8 @@ function okBox(cat) { const B = S.batch; if (!B || B.cat !== cat) return ""; con
 /* The 12 sections as tiles (Dylan, 15 Oct 2026: « un énorme pavé à lire ») — a tile shows its title only; touching it opens what
    it covers, what Legacy Shaper does with it for the client, and its « Déposer » button. One open at a time. */
 function tileHTML(k, i) {
-  const t = T[lang], [h, d, y] = t.ess[i], n = got(filesOf(k)), open = S.open === k;
-  return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
+  const t = T[lang], [h, d, y, pr] = t.ess[CAT_KEYS.indexOf(k)], n = got(filesOf(k)), open = S.open === k;   // i = place shown (TILE_ORDER)
+  return `<div class="tile${open ? " open" : ""}" id="cat_${k}"><button type="button" class="th" data-tile="${k}" aria-expanded="${open}"><span class="n">${i + 1}</span><span class="tt">${esc(h)}${ESSAI_TXT && pr ? `<em class="prio">${esc(t.prio)}</em>` : ""}</span>${n ? `<span class="tc">✓ ${n}</span>` : ""}</button>
     ${open ? `<div class="tb"><p>${esc(d)}</p><p class="you"><span>${esc(t.forYou)} ·</span> ${esc(y)}</p>${n ? `<p class="got">✓ ${esc(t.received(n))}</p>` : ""}${listHTML(filesOf(k))}<div class="acts"><button type="button" class="btn sm" data-cat="${k}">${esc(t.share)}</button><button type="button" class="btn sm ghost" data-more="cam" data-morecat="${k}">${esc(t.photo)}</button></div>${okBox(k)}</div>` : ""}</div>`;
 }
 function render() {
@@ -404,7 +426,7 @@ function render() {
   <h2 class="two">${esc(t.twoT)}</h2>
   <p class="twop">${esc(t.twoP)}</p>
   ${got(S.files) ? `<p class="total">${esc(t.total(got(S.files)))}</p>` : ""}
-  <section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${got(bulk) ? esc(t.received(got(bulk))) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
+  ${ESSAI_TXT ? `<div class="c1row">` : ""}<section class="choice"><h2>${esc(t.c1T)}<span class="cnt">${got(bulk) ? esc(t.received(got(bulk))) : ""}</span></h2><p class="sub">${esc(t.c1S)}</p>
     <p class="prio1">${esc(t.prioLine)}</p>
     <label class="drop" id="drop" tabindex="0"><b>${esc(t.dropB)}</b><span>${esc(t.dropS)}</span></label>
     <p class="formats">${esc(t.formats)}</p>
@@ -414,9 +436,11 @@ function render() {
       <div class="acts"><button type="button" class="btn ghost" id="lnkSend">${esc(t.linkSend)}</button></div></div>
     <div class="acts"><button type="button" class="btn ghost" id="camBtn">${esc(t.photo)}</button><button type="button" class="btn ghost" id="pickBtn">${esc(t.files)}</button></div>
     ${okBox(null)}${listHTML(bulk)}</section>
+  ${ESSAI_TXT ? `<section class="choice phbox" id="phBox"><h2>${esc(t.photoT)}${got(filesOf("photos")) ? `<span class="cnt">${esc(t.received(got(filesOf("photos"))))}</span>` : ""}</h2><p class="sub">${esc(t.photoS)}</p>
+    <div class="acts"><button type="button" class="btn ghost" id="phBtn">${esc(t.photoB)}</button></div>${S.open === "photos" ? "" : okBox("photos")}</section></div>` : ""}
   <section class="choice"><h2>${esc(t.c2T)}</h2><p class="sub">${esc(t.c2S)}</p>
     <p class="sub">${esc(t.essP)}</p>
-    <div class="tiles">${CAT_KEYS.map(tileHTML).join("")}</div>
+    <div class="tiles">${TILE_ORDER.map(tileHTML).join("")}</div>
     <div class="heavy"><b>${esc(t.heavyT)}</b><p>${esc(t.heavyP)}</p><div class="acts"><button type="button" class="btn ghost" data-golink="1">${esc(t.sendLink)}</button></div></div>
     <div class="doubt">${esc(t.doubt)}</div></section>
   <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(ESSAI_TXT ? t.qPe : t.qP)}</p>
@@ -474,6 +498,7 @@ function wire() {
   document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; if (lang === "en" && S.hCiv === "me") S.hCiv = ""; render(); });   // « Maître » en français seulement (Dylan, 19/10/2026) ; en anglais : Mr / Ms
   $("#pick").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   $("#cam").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+  $("#pickPh").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   const m = $("#main");
   m.addEventListener("click", e => {
     const tl = e.target.closest("[data-tile]"); if (tl) { S.open = S.open === tl.dataset.tile ? null : tl.dataset.tile; render(); const o = $("#cat_" + tl.dataset.tile); if (o) o.scrollIntoView({ block: "nearest" }); return; }
@@ -483,6 +508,7 @@ function wire() {
     const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }
+    if (e.target.closest("#phBtn")) { target = "photos"; $("#pickPh").click(); return; }   // photos rubric, full quality (the file is sent as it is)
     const cv = e.target.closest("[data-hciv]"); if (cv) { S.hCiv = S.hCiv === cv.dataset.hciv ? "" : cv.dataset.hciv;
       document.querySelectorAll("[data-hciv]").forEach(b => { const on = b.dataset.hciv === S.hCiv; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); }); return; }
     if (e.target.closest("#hAdd")) {

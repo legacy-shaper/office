@@ -71,6 +71,9 @@ select.t,input.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;
 select.t{margin-top:8px}
 .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;margin:10px 0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.civ{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:0 0 12px}
+.civ button{all:unset;cursor:pointer;padding:9px 18px;font:500 15px/1 "Hanken Grotesk",sans-serif;color:var(--ink);min-height:20px}
+.civ button.on{background:var(--green);color:var(--ivory)} .opt{color:var(--muted);font-weight:400}
 @media (max-width:560px){.row2{grid-template-columns:1fr}}
 label.f{display:block;font-size:13px;color:var(--muted);margin:8px 0 5px}
 .chk{display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-size:14px}
@@ -103,6 +106,7 @@ section.choice{border-width:1.5px;border-color:rgba(196,160,82,.55)}
 textarea.t{width:100%;border:1px solid rgba(36,74,48,.28);background:#fff;border-radius:10px;padding:11px 12px;font:400 16px/1.4 "Hanken Grotesk",sans-serif;color:var(--ink);resize:vertical}
 .qsent{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
 .qsent p{margin:0 0 4px;font-size:15px}.qsent span{font-size:13px;color:var(--green)}
+.qrep{border:1.5px solid var(--green);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:15px;white-space:pre-line}.qrep b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--goldtxt);margin-bottom:2px}
 .link{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
 .link b{display:block;font:500 20px/1.3 "Cormorant Garamond",Georgia,serif;color:var(--green);margin-bottom:4px}
 .link p{font-size:14px;color:var(--muted);margin:0 0 10px}
@@ -168,6 +172,9 @@ const SB_KEY = "sb_publishable_cgnIJdHGS2Xwq-lqHC_6Qw_r6zb5iRM";
 const Q = new URLSearchParams(location.search);
 const PREVIEW = Q.get("preview") === "1";
 const token = (Q.get("k") || "").toLowerCase();
+// essai de Dylan (19/10/2026) : la civilité du proche, cachée tant qu'il ne l'a pas vue en vrai (?essai=afaire allume, ?essai=non éteint)
+const ESSAI = (() => { try { const e = Q.get("essai"); if (e === "afaire") localStorage.setItem("ls-essai-afaire", "1"); else if (e === "non") localStorage.removeItem("ls-essai-afaire");
+  return localStorage.getItem("ls-essai-afaire") === "1"; } catch (x) { return false; } })();
 // Dylan's own checks (« Voir la page » from The Legacy adds &apercu=1) are kept apart, as for the questionnaire and the quote
 const SELF = PREVIEW || (() => { try {
   const u = new URL(location.href);
@@ -245,13 +252,14 @@ fr: {
     ["Propriété, prêts et contrats", "Sociétés, trusts, copropriété, contrats de prêt, de dépôt ou de consignation."],
     ["Frais et autres documents", "Factures de vos frais passés et tout ce qui concerne vos œuvres : correspondances, notes."]],
   qT: "Une question ?", qP: "Écrivez-nous ici : votre message nous parvient aussitôt, et notre réponse vous est adressée par email.",
-  qPh: "Votre question", qSend: "Envoyer", qDone: "Votre message nous est bien parvenu. Nous vous répondons très rapidement.",
+  qPe: "Écrivez-nous ici : votre message nous parvient aussitôt, et notre réponse vous est adressée par email ; elle s’affiche aussi ici.", qRep: "Notre réponse",
+  qPh: "Votre question", qSend: "Envoyer", qDone: "Votre message nous est bien parvenu. Nous vous répondons très rapidement.", qDoneE: "Votre message nous est bien parvenu. Nous vous répondrons très prochainement.",
   linkT: "Beaucoup de documents ? Un simple lien suffit.", linkP: "Si vous ou votre assistant préférez nous transmettre l’ensemble en une seule fois, par WeTransfer, Dropbox, Google Drive ou tout autre service, collez simplement le lien ici. Vous pouvez aussi l’adresser à office@legacy-shaper.com.",
   linkPh: "Collez votre lien ici", linkSend: "Envoyer le lien", linkDone: "Lien bien reçu : nous récupérons vos documents dès aujourd’hui.", linkBad: "Ce lien semble incomplet : copiez-le en entier, il commence par https://",
   mailT: "Par email, si vous le préférez", mailP: "Vous pouvez aussi nous adresser vos documents, ou un lien de transfert, à office@legacy-shaper.com : ils rejoindront ce même dossier.",
   helpT: "Une personne de votre entourage conserve des documents ?",
   helpP: "Si votre assistant, votre avocat, votre family office ou toute autre personne de votre choix conserve une partie de ces documents, indiquez-nous qui contacter : nous lui ouvrirons un accès à son nom. Cet accès lui permettra uniquement de déposer des documents ; la consultation de votre collection et de nos analyses vous reste strictement réservée, sauf demande expresse de votre part.",
-  hName: "Nom", hEmail: "Email", hRole: "Son rôle (assistant, avocat, family office…)", hAdd: "Lui ouvrir un accès", hDone: n => `Demande d’accès bien reçue pour ${n} : nous lui adressons son lien.`,
+  hName: "Nom", hEmail: "Email", hRole: "Son rôle (assistant, avocat, family office…)", hCiv: "Civilité", hOpt: "(facultatif)", hMme: "Madame", hM: "Monsieur", hMe: "Maître", hFirst: "Prénom", hLast: "Nom", hAdd: "Lui ouvrir un accès", hDone: n => `Demande d’accès bien reçue pour ${n} : nous lui adressons son lien.`,
   endP: "Lorsque vous estimerez nous avoir transmis l’essentiel, un simple clic sur « J’ai terminé mon dépôt » nous permettra d’engager l’analyse. Le lien reste ouvert par la suite : tout document que vous retrouveriez plus tard sera le bienvenu.",
   finish: "J’ai terminé mon dépôt",
   doneP1: "Merci. Nous engageons l’analyse de vos documents.", doneP2: "Au terme de la phase 1, vous recevrez notre première analyse, avec l’estimation confirmée ou ajustée de la mise en ordre. Ce lien reste ouvert : tout document retrouvé plus tard sera le bienvenu.",
@@ -320,13 +328,14 @@ en: {
     ["Ownership, loans and agreements", "Companies, trusts, co-ownership, loan, deposit or consignment agreements."],
     ["Costs and other documents", "Invoices for past costs and anything else relating to your works: correspondence, notes."]],
   qT: "A question?", qP: "Write to us here: your message reaches us at once, and our reply is sent to you by email.",
+  qPe: "Write to us here: your message reaches us at once, and our reply is sent to you by email; it also appears here.", qRep: "Our reply",
   qPh: "Your question", qSend: "Send", qDone: "Your message has reached us. We will reply very shortly.",
   linkT: "Many documents? A simple link is enough.", linkP: "If you or your assistant would rather send everything in one go, through WeTransfer, Dropbox, Google Drive or any other service, simply paste the link here. You may also send it to office@legacy-shaper.com.",
   linkPh: "Paste your link here", linkSend: "Send the link", linkDone: "Link received: we are collecting your documents today.", linkBad: "This link seems incomplete: please copy it in full, it starts with https://",
   mailT: "By email, if you prefer", mailP: "You are also welcome to send your documents, or a transfer link, to office@legacy-shaper.com: they will join this same file.",
   helpT: "Does someone close to you hold documents?",
   helpP: "If your assistant, your lawyer, your family office or anyone else of your choosing holds some of these documents, please let us know whom to contact: we will open an access in their name. This access will only allow them to upload documents; viewing your collection and our analyses remains strictly reserved to you, unless you expressly request otherwise.",
-  hName: "Name", hEmail: "Email", hRole: "Their role (assistant, lawyer, family office…)", hAdd: "Open an access", hDone: n => `Access request received for ${n}: we are sending them their link.`,
+  hName: "Name", hEmail: "Email", hRole: "Their role (assistant, lawyer, family office…)", hCiv: "Title", hOpt: "(optional)", hMme: "Ms", hM: "Mr", hFirst: "First name", hLast: "Last name", hAdd: "Open an access", hDone: n => `Access request received for ${n}: we are sending them their link.`,
   endP: "Once you feel you have sent us the essentials, a simple click on “I have finished uploading” will allow us to begin the analysis. The link remains open afterwards: any document you find later will be most welcome.",
   finish: "I have finished uploading",
   doneP1: "Thank you. We are beginning the analysis of your documents.", doneP2: "At the end of phase 1, you will receive our first analysis, together with the confirmed or adjusted estimate for putting your collection in order. This link remains open: any document found later will be most welcome.",
@@ -343,6 +352,13 @@ en: {
 const CAT_KEYS = ["list", "storage", "invoices", "photos", "certificates", "insurance", "condition", "valuations", "provenance", "shipping", "ownership", "other"];
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* essai de Dylan (19/10/2026) : l'anglais aligné (« private document portal », « organisation of your collection », « retainer ») et « même imparfaites » retiré,
+   seulement avec ?essai=afaire (?essai=non l'éteint) ; la liste vient de tools/en_align.json */
+const EN_ALIGN = [["Collection Office · Putting in order, phase 1", "Collection Office · Organisation, phase 1"], ["Your document space is now open, at this private link,", "Your private document portal is now open, at this link,"], ["Your document space", "Your private document portal"], ["Putting your collection in order, in two phases", "The organisation of your collection, in two phases"], ["The balance of the putting in order is invoiced at the end", "The balance for the organisation of your collection is invoiced at the end"], ["retainer for the putting in order (", "retainer for the organisation ("], ["putting in order and plan", "organisation and plan"], ["Would you prefer us to conduct the putting in order with", "Would you prefer us to conduct the organisation of your collection with"], ["Our collaboration opens with bringing your collection into order,", "Our collaboration opens with the organisation of your collection,"], ["Putting your collection in order begins", "The organisation of your collection begins"], ["The process of putting your collection in order begins today.", "The organisation of your collection begins today."], ["the estimate for putting your collection in order", "the estimate for the organisation of your collection"], ["so that we can begin putting your collection in order.", "so that we can begin the organisation of your collection."], ["to one of its first putting-in-order engagements. The putting in order and the first year", "to one of its very first organisation engagements. The organisation of your collection and the first year"], ["Putting your collection in order · ", "Organisation of your collection · "], ["% provision on the estimate", "% retainer on the estimate"], ["The putting in order begins as soon as", "The organisation begins as soon as"], ["The balance of the putting in order, based on", "The balance of the organisation, based on"], ["after deduction of the provision", "after deduction of the retainer"], ["Your collection, put in order, is handed over", "Your collection, once organised, is handed over"], ["It settles the putting in order of your collection", "It settles the organisation of your collection"], ["Your collection, put in order, and its report", "Your collection, once organised, and its report"], ["putting your collection in order is now complete", "the organisation of your collection is now complete"], ["documented and brought into order in The Legacy", "documented and organised in The Legacy"], ["Putting the collection in order", "Organisation of the collection"], [", even imperfect ones", ""], [", même imparfaites", ""], ["we will open an access in their name", "we will grant them access in their own name"], ["remains strictly reserved to you", "remains strictly reserved for you"], [", even if incomplete.", "."], ["without worrying about sorting them: that is our job.", "without worrying about sorting them: we take care of that."], ["From your documents, we will ourselves identify the various entities", "We will identify, from your documents, the various entities"], ["sans vous soucier de les trier : c'est notre travail.", "sans vous soucier de les trier : nous nous en chargeons."], [", même sommaire, ainsi que", ", ainsi que"], [", même incomplète.", "."], ["sans vous soucier de les trier : c’est notre travail.", "sans vous soucier de les trier : nous nous en chargeons."], ["export de votre logiciel de collection, même sommaire ou en brouillon", "export de votre logiciel de collection, ou simples notes"], ["Pour commencer : votre liste d’œuvres, même sommaire, et les documents", "Pour commencer : votre liste d’œuvres et les documents"], [", however brief, together with", ", together with"], ["export from your collection software, however brief or in draft", "export from your collection software, or simple notes"], ["To begin with: your list of works, however brief, and the documents", "To begin with: your list of works and the documents"], ["at any time, at this private link:", "at any time, through this private link:"]];
+const ESSAI_TXT = (() => { try { const e = new URLSearchParams(location.search).get("essai"); if (e === "afaire") localStorage.setItem("ls-essai-afaire", "1"); else if (e === "non") localStorage.removeItem("ls-essai-afaire");
+  return localStorage.getItem("ls-essai-afaire") === "1"; } catch (x) { return false; } })();
+const enAlign = o => { if (!ESSAI_TXT) return o; for (const k in o) { const v = o[k]; if (typeof v === "string") o[k] = EN_ALIGN.reduce((s, [a, b]) => s.split(a).join(b), v); else if (v && typeof v === "object") enAlign(v); } return o; };
+enAlign(T);
 let lang = Q.get("lang") === "en" ? "en" : "fr";
 let S = { files: [], helpers: [], questions: [], links: [], open: null, finished: false, wasFinished: false, role: "client", msgErr: "" };
 let target = null;   // the section a file is uploaded into (null = « Tout en vrac »)
@@ -403,15 +419,18 @@ function render() {
     <div class="tiles">${CAT_KEYS.map(tileHTML).join("")}</div>
     <div class="heavy"><b>${esc(t.heavyT)}</b><p>${esc(t.heavyP)}</p><div class="acts"><button type="button" class="btn ghost" data-golink="1">${esc(t.sendLink)}</button></div></div>
     <div class="doubt">${esc(t.doubt)}</div></section>
-  <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(t.qP)}</p>
-    ${S.questions.map(q => `<div class="qsent"><p>${esc(q)}</p><span>✓ ${esc(t.qDone)}</span></div>`).join("")}
+  <section id="ask"><h2>${esc(t.qT)}</h2><p class="sub">${esc(ESSAI_TXT ? t.qPe : t.qP)}</p>
+    ${S.questions.map(q => `<div class="qsent"><p>${esc(q.text)}</p>${ESSAI_TXT && q.reply ? `<div class="qrep"><b>${esc(t.qRep)}${q.rat ? " · " + esc(new Date(q.rat).toLocaleDateString(t.dateFmt, { day: "numeric", month: "long" })) : ""}</b>${esc(q.reply)}</div>` : `<span>✓ ${esc((ESSAI_TXT && t.qDoneE) || t.qDone)}</span>`}</div>`).join("")}
     <textarea class="t" id="qText" rows="3" placeholder="${esc(t.qPh)}"></textarea>
     <div class="acts"><button type="button" class="btn ghost" id="qSend">${esc(t.qSend)}</button></div></section>
   <section><h2>${esc(t.mailT)}</h2><p class="sub">${esc(t.mailP)}</p></section>
   ${S.msgErr ? `<p class="warn">${esc(t.msgFail)}</p>` : ""}
   <section${S.role === "helper" ? ' class="hidden"' : ""}><h2>${esc(t.helpT)}</h2><p class="sub">${esc(t.helpP)}</p>
     ${S.helpers.map(h => `<p class="signed">✓ ${esc(t.hDone(h.name))}</p>`).join("")}
-    <div class="row2"><div><label class="f" for="hName">${esc(t.hName)}</label><input class="t" id="hName" autocomplete="off"></div><div><label class="f" for="hEmail">${esc(t.hEmail)}</label><input class="t" id="hEmail" type="email" inputmode="email" autocomplete="off"></div></div>
+    ${ESSAI ? `<label class="f">${esc(t.hCiv)} <span class="opt">${esc(t.hOpt)}</span></label><div class="civ" role="group" aria-label="${esc(t.hCiv)}"><button type="button" data-hciv="f" class="${S.hCiv === "f" ? "on" : ""}" aria-pressed="${S.hCiv === "f"}">${esc(t.hMme)}</button><button type="button" data-hciv="m" class="${S.hCiv === "m" ? "on" : ""}" aria-pressed="${S.hCiv === "m"}">${esc(t.hM)}</button>${t.hMe ? `<button type="button" data-hciv="me" class="${S.hCiv === "me" ? "on" : ""}" aria-pressed="${S.hCiv === "me"}">${esc(t.hMe)}</button>` : ""}</div>
+    <div class="row2"><div><label class="f" for="hFirst">${esc(t.hFirst)}</label><input class="t" id="hFirst" autocomplete="off"></div><div><label class="f" for="hLast">${esc(t.hLast)}</label><input class="t" id="hLast" autocomplete="off"></div></div>
+    <label class="f" for="hEmail">${esc(t.hEmail)}</label><input class="t" id="hEmail" type="email" inputmode="email" autocomplete="off">`
+    : `<div class="row2"><div><label class="f" for="hName">${esc(t.hName)}</label><input class="t" id="hName" autocomplete="off"></div><div><label class="f" for="hEmail">${esc(t.hEmail)}</label><input class="t" id="hEmail" type="email" inputmode="email" autocomplete="off"></div></div>`}
     <label class="f" for="hRole">${esc(t.hRole)}</label><input class="t" id="hRole" autocomplete="off">
     <div class="acts"><button type="button" class="btn ghost" id="hAdd">${esc(t.hAdd)}</button></div></section>
   <p class="lead" style="text-align:center;font-size:19px;margin:26px auto 0">${esc(t.endP)}</p>
@@ -452,7 +471,7 @@ async function message(kind, body, ok) {
   render();
 }
 function wire() {
-  document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; render(); });
+  document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; if (lang === "en" && S.hCiv === "me") S.hCiv = ""; render(); });   // « Maître » en français seulement (Dylan, 19/10/2026) ; en anglais : Mr / Ms
   $("#pick").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   $("#cam").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
   const m = $("#main");
@@ -464,7 +483,13 @@ function wire() {
     const c = e.target.closest("[data-cat]"); if (c) { target = c.dataset.cat; $("#pick").click(); return; }
     if (e.target.closest("#drop") || e.target.closest("#pickBtn")) { e.preventDefault(); target = null; $("#pick").click(); return; }
     if (e.target.closest("#camBtn")) { target = null; $("#cam").click(); return; }
-    if (e.target.closest("#hAdd")) { const n = $("#hName").value.trim(), em = $("#hEmail").value.trim();
+    const cv = e.target.closest("[data-hciv]"); if (cv) { S.hCiv = S.hCiv === cv.dataset.hciv ? "" : cv.dataset.hciv;
+      document.querySelectorAll("[data-hciv]").forEach(b => { const on = b.dataset.hciv === S.hCiv; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); }); return; }
+    if (e.target.closest("#hAdd")) {
+      if (ESSAI) { const fi = $("#hFirst").value.trim(), la = $("#hLast").value.trim(), em = $("#hEmail").value.trim(), n = [fi, la].filter(Boolean).join(" ");
+        if (!la || !/.+@.+\..+/.test(em)) { (la ? $("#hEmail") : $("#hLast")).focus(); return; }
+        const h = { name: n, civ: S.hCiv || "", first: fi, last: la, email: em, role: $("#hRole").value.trim() }; message("helper", h, () => { S.helpers.push(h); S.hCiv = ""; }); return; }
+      const n = $("#hName").value.trim(), em = $("#hEmail").value.trim();
       if (!n || !/.+@.+\..+/.test(em)) { (n ? $("#hEmail") : $("#hName")).focus(); return; }
       const h = { name: n, email: em, role: $("#hRole").value.trim() }; message("helper", h, () => S.helpers.push(h)); return; }
     if (e.target.closest("#lnkSend")) { const v = $("#lnk").value.trim();
@@ -473,7 +498,7 @@ function wire() {
       message("link", { url: v }, () => S.links.push(v)); return; }
     if (e.target.closest("#qSend")) { const q = $("#qText").value.trim(); if (!q) { $("#qText").focus(); return; }
       // connected version: stored with the contact's file, email + notification to Legacy Shaper; the reply goes out by email
-      message("question", { text: q }, () => S.questions.push(q)); const a = $("#ask"); if (a) a.scrollIntoView({ block: "center" }); return; }
+      message("question", { text: q }, () => S.questions.push({ text: q })); const a = $("#ask"); if (a) a.scrollIntoView({ block: "center" }); return; }
     if (e.target.closest("#finish")) { finish(); }
   });
   m.addEventListener("dragover", e => { const d = e.target.closest("#drop"); if (d) { e.preventDefault(); d.classList.add("over"); } });
@@ -499,6 +524,8 @@ async function start() {
   if (!Q.get("lang")) lang = r.lang === "en" ? "en" : "fr";
   S.role = r.role === "helper" ? "helper" : "client"; S.wasFinished = !!r.finished;
   S.files = (r.files || []).map(f => ({ name: f.name, cat: f.cat || null, at: f.at }));
+  // 031 (Dylan, 19/10/2026, page 5 « 1 », essai) : les questions de CE lien, avec notre réponse sous chacune une fois partie
+  if (ESSAI_TXT) S.questions = (r.questions || []).filter(q => q && q.text).map(q => ({ text: q.text, reply: q.reply || "", rat: q.replied_at || null }));
   if (SELF) $("#selfNote").classList.remove("hidden"); else notify("open");
   $("#main").classList.remove("hidden"); render();
 }
